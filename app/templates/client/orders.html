@@ -1,0 +1,92 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Мои заказы</h1>
+  <p>Оформленный заказ сразу попадает к менеджеру АЭРОХАБ: он появляется в разделе «Заказы»
+     кабинета сотрудника, оттуда же приходят документы по сделке.</p>
+</div>
+
+{% if placed %}
+<div class="form-ok">Заказ оформлен и передан менеджеру. Первый контакт — в течение 30 минут
+  в рабочее время.</div>
+{% endif %}
+
+<div class="col-2-1">
+  <div>
+    <div class="table-wrap">
+      <table class="proc-table">
+        <thead><tr><th>Заказ</th><th>Комплект</th><th>Сумма</th><th>Этап</th><th>Что требуется</th><th>Файлы</th><th></th></tr></thead>
+        <tbody>
+          {% for d in deals %}
+          {% set st = stage_of[d.id] %}
+          <tr>
+            <td class="proc-code">№{{ d.number }}<br><span class="muted">{{ d.created_at|ru_date }}</span></td>
+            <td class="proc-name">{{ d.product }}<br><span class="muted">«{{ d.package }}»</span></td>
+            <td class="proc-kpi">{{ d.amount|money }}</td>
+            <td><span class="doc-status {{ 'blue' if st.actor == 'client' else ('ok' if st.key == 'done' else '') }}">{{ st.title }}</span></td>
+            <td class="proc-kpi">{{ st.client }}</td>
+            <td class="proc-kpi">{{ d.files|selectattr('visible_to_client')|list|length }}</td>
+            <td><a class="btn btn-outline btn-sm" href="/cabinet/orders/{{ d.id }}">Открыть</a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="empty">Заказов пока нет — оформите первый справа.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="oq-box draft" style="margin-top:26px;">
+      <h3>◆ Как проходит заказ</h3>
+      <p>Заявка → менеджер согласовывает состав и цену → выставляет счёт-фактуру (появится
+         в карточке заказа) → вы оплачиваете и прикладываете чек → менеджер подтверждает оплату →
+         отгрузка и закрытие заказа. Каждый шаг виден в карточке заказа и в истории.</p>
+    </div>
+  </div>
+
+  <div class="card solo">
+    <h4>Оформить заказ</h4>
+    <form method="post" action="/cabinet/orders">
+      <div class="f-row">
+        <label>Платформа</label>
+        <select name="model">
+          {% for m in models %}
+          <option value="{{ m.key }}" {{ 'selected' if m.key == 't100' }}>{{ m.name }} — {{ m.price|money }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="f-row">
+        <label>Пакет</label>
+        <select name="package">
+          {% for p in packages %}
+          <option value="{{ p.key }}" {{ 'selected' if p.key == 'pro' }}>
+            {{ p.name }}{% if p.extra %} · +{{ p.extra|money }}{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="f-row">
+        <label>Дополнительное оснащение</label>
+        {% for o in options %}
+        <label class="opt-row" style="cursor:pointer;padding:8px 0;">
+          <input type="checkbox" name="options" value="{{ o.key }}" style="accent-color:#FF6A1A;">
+          <span class="opt-main"><b>{{ o.name }}</b><span>{{ o.note }}</span></span>
+          <span class="opt-price">{{ o.price|money }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="f-row">
+        <label>Город поставки</label>
+        <input type="text" name="city" value="{{ user.company.city if user.company else '' }}" placeholder="Самара">
+      </div>
+      <div class="f-row">
+        <label>Комментарий</label>
+        <textarea name="comment" placeholder="Площадь, культуры, желаемый срок поставки."></textarea>
+      </div>
+      <button class="btn btn-primary btn-block">Оформить заказ</button>
+    </form>
+    <p class="demo-note">Стоимость предварительная: менеджер подтверждает состав, цену и срок
+       поставки перед выставлением счёта.</p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'public_base.html' %}
+{% block title %}Конфигуратор комплектаций — АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap">
+  <div class="roi-top">
+    <div>
+      <div class="eyebrow">Конфигуратор комплектаций</div>
+      <h1 id="cfg-title">Конфигурация DJI T100</h1>
+    </div>
+    <div class="roi-desc">
+      Соберите рабочую конфигурацию под задачи хозяйства: опрыскивание, внесение гранул и
+      транспортировка грузов. Состав и стоимость пересчитываются сразу, готовую спецификацию
+      можно отправить в заявку на КП.
+    </div>
+    <div class="roi-actions">
+      <a href="/roi" class="btn btn-ghost">Посчитать окупаемость</a>
+      {% if not user %}
+      <div class="muted-sm">Чтобы запросить КП, войдите или зарегистрируйтесь —
+        заявка появится в вашем кабинете.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <form method="post" action="/cabinet/orders" id="cfg-form">
+  <input type="hidden" name="comment" id="cfg-preset">
+  <div class="roi-grid">
+    <div class="roi-params">
+      <div class="roi-panel-title">Платформа и пакет</div>
+
+      <div class="param">
+        <label>Базовая платформа</label>
+        <select id="cfg-model" name="model">
+          {% for m in models %}
+          <option value="{{ m.key }}" data-price="{{ m.price }}" data-name="{{ m.name }}"
+                  data-tank="{{ m.tank }}" data-width="{{ m.width }}" data-shift="{{ m.shift }}"
+                  {{ 'selected' if m.key == 't100' }}>{{ m.name }} — {{ m.price|money }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="param">
+        <label>Пакет</label>
+        <select id="cfg-package" name="package">
+          {% for p in packages %}
+          <option value="{{ p.key }}" data-extra="{{ p.extra }}" data-name="{{ p.name }}"
+                  {{ 'selected' if p.key == 'pro' }}>{{ p.name }}{% if p.extra %} · +{{ p.extra|money }}{% endif %}</option>
+          {% endfor %}
+        </select>
+        <div class="muted-sm" id="cfg-package-note" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="card solo" style="margin-top:18px;">
+        <h4>Характеристики</h4>
+        <div class="doc-row"><span>Бак опрыскивания</span><span class="doc-status" id="cfg-tank">100 л</span></div>
+        <div class="doc-row"><span>Рабочая ширина</span><span class="doc-status" id="cfg-width">5–13 м</span></div>
+        <div class="doc-row"><span>Производительность</span><span class="doc-status" id="cfg-shift">до 145 га/день</span></div>
+      </div>
+
+      <div style="margin-top:18px;">
+        {% with img_id = 'cfg-img', src_id = 'cfg-src' %}
+          {% include 'partials/drone.html' %}
+        {% endwith %}
+      </div>
+    </div>
+
+    <div class="roi-results">
+      <div class="roi-panel-title">Дополнительное оснащение</div>
+      <div id="cfg-options">
+        {% for o in options %}
+        <label class="opt-row" style="cursor:pointer;">
+          <input type="checkbox" class="hidden cfg-opt" name="options" value="{{ o.key }}" data-price="{{ o.price }}"
+                 data-name="{{ o.name }}" {{ 'checked' if o.key in ('rtk', 'cargo', 'charger', 'training') }}>
+          <span class="opt-box"></span>
+          <span class="opt-main">
+            <b>{{ o.name }}</b>
+            <span>{{ o.note }}</span>
+          </span>
+          <span class="opt-price">{{ o.price|money }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <section class="block">
+        <div class="block-head"><h2>Итог</h2><span class="block-note" id="cfg-count">0 позиций</span></div>
+        <div class="cards two">
+          <div class="card">
+            <h4>Стоимость комплекта</h4>
+            <div class="del-progress" id="cfg-total">—</div>
+            <div class="muted" style="margin-top:6px;">Цена с учётом НДС · срок поставки 30–45 дней</div>
+
+            {% if user and user.role == 'client' %}
+              <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px;">
+                Запросить КП по комплектации →
+              </button>
+              <div class="muted-sm" style="margin-top:8px;">Заявка появится в разделе
+                «Мои заказы», менеджер согласует состав и выставит счёт.</div>
+            {% elif user %}
+              <a href="/kp" class="btn btn-outline btn-block" style="margin-top:16px;">
+                Запросить КП →
+              </a>
+              <div class="muted-sm" style="margin-top:8px;">Вы вошли как
+                {{ user.role_title|lower }} — заказ оформляется из кабинета покупателя.</div>
+            {% else %}
+              <a href="/login?next=/configurator" class="btn btn-primary btn-block" style="margin-top:16px;">
+                Войти и запросить КП →
+              </a>
+              <a href="/register?portal=client" class="btn btn-ghost btn-block" style="margin-top:10px;">
+                Зарегистрироваться
+              </a>
+              <div class="muted-sm" style="margin-top:8px;">Заявка сохранится в личном кабинете:
+                там будут счёт, документы и статус заказа.</div>
+            {% endif %}
+          </div>
+          <div class="card">
+            <h4>Спецификация</h4>
+            <div id="cfg-spec"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/configurator.js"></script>
+{% endblock %}

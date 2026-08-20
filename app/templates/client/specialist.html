@@ -1,0 +1,39 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Ваш специалист</h1>
+  <p>Инженер внедрения ведёт сделку после подписания договора: комплектация, поставка,
+     обучение, ввод в эксплуатацию и первые обработки.</p>
+</div>
+
+<div class="col-1-2">
+  <div class="card solo">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="tb-avatar" style="width:52px;height:52px;font-size:18px;">{{ deal.specialist_name[:1] }}</div>
+      <div>
+        <b style="font-family:'Unbounded';font-size:16px;">{{ deal.specialist_name }}</b>
+        <div class="muted">{{ deal.specialist_role }}</div>
+      </div>
+    </div>
+    <div class="doc-row" style="margin-top:16px;"><span>Телефон</span><span class="doc-status">{{ deal.specialist_phone }}</span></div>
+    <div class="doc-row"><span>Почта</span><span class="doc-status">{{ deal.specialist_email }}</span></div>
+    <div class="doc-row"><span>Сделка</span><span class="doc-status">Договор №{{ deal.number }}</span></div>
+  </div>
+
+  <div class="card solo">
+    <h4>Написать специалисту</h4>
+    {% if sent %}<div class="form-ok">Сообщение отправлено. Ответ придёт на {{ user.email }}.</div>{% endif %}
+    <form method="post" action="/cabinet/message">
+      <input type="hidden" name="topic" value="Специалист">
+      <div class="f-row">
+        <label>Сообщение</label>
+        <textarea name="text" placeholder="Вопрос по поставке, комплектации, обучению или эксплуатации." required></textarea>
+      </div>
+      <button class="btn btn-primary">Отправить сообщение</button>
+    </form>
+    <p class="demo-note">Обращение фиксируется в CRM и попадает в раздел «Входящие заявки»
+       кабинета сотрудника — вместе с вашей сделкой.</p>
+  </div>
+</div>
+{% endblock %}

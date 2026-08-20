@@ -1,0 +1,41 @@
+{% extends 'dealer/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Материалы и обучение</h1>
+  <p>Материалы для работы с конечным клиентом и подготовка дилерских специалистов.</p>
+</div>
+
+<div class="cards" style="margin-top:20px;">
+  <div class="card">
+    <h4>Продуктовые материалы</h4>
+    <div class="doc-row"><span>Презентация T25/T50/T70/T100</span><span class="doc-status dim">по запросу</span></div>
+    <div class="doc-row"><span>Актуальный прайс-лист</span><span class="doc-status warn">не утверждён</span></div>
+    <div class="doc-row"><span>Типовые комплектации</span><span class="doc-status">в конфигураторе</span></div>
+    <a href="/configurator" class="link-accent" style="margin-top:12px;">Открыть конфигуратор →</a>
+  </div>
+  <div class="card">
+    <h4>Расчёты для клиента</h4>
+    <div class="doc-row"><span>ROI-калькулятор</span><span class="doc-status">доступен</span></div>
+    <div class="doc-row"><span>Экономика гектара</span><span class="doc-status">в калькуляторе</span></div>
+    <div class="doc-row"><span>Сравнение комплектаций</span><span class="doc-status dim">по запросу</span></div>
+    <a href="/roi" class="link-accent" style="margin-top:12px;">Открыть калькулятор →</a>
+  </div>
+  <div class="card">
+    <h4>Обучение специалистов</h4>
+    <div class="doc-row"><span>Курс по продукту</span><span class="doc-status dim">согласуется с АУЦ</span></div>
+    <div class="doc-row"><span>Курс операторов</span><span class="doc-status dim">по графику</span></div>
+    <p class="muted-sm" style="margin-top:10px;">Программа согласуется с начальником АУЦ (DEL-460).</p>
+  </div>
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Правила использования материалов</h2></div>
+  <ul class="rule-list">
+    <li>Актуальный прайс-лист и презентации — по запросу менеджеру продаж АЭРОХАБ.</li>
+    <li>Курс для дилерских специалистов согласуется с начальником АУЦ (DEL-460).</li>
+    <li>Правило 100% предоплаты действует и для дилерских заявок.</li>
+    <li>Неподтверждённое КП клиенту не отправляется.</li>
+  </ul>
+</section>
+{% endblock %}

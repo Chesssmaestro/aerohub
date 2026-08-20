@@ -1,0 +1,171 @@
+{% extends 'public_base.html' %}
+{% block title %}ROI-калькулятор — экономика эксплуатации АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap">
+  <div class="roi-top">
+    <div>
+      <div class="eyebrow">ROI / экономика эксплуатации</div>
+      <h1 id="roi-title">Экономика эксплуатации DJI T100</h1>
+    </div>
+    <div class="roi-desc">
+      Калькулятор помогает оценить стоимость обработки, сезонную экономию и срок окупаемости
+      агродрона для конкретного хозяйства. Все расчёты собираются в понятную финансовую модель,
+      пригодную для предварительного коммерческого обсуждения.
+    </div>
+    <div class="roi-actions">
+      <button type="button" class="btn btn-primary" id="roi-save">Рассчитать под своё хозяйство →</button>
+      <a href="/kp" class="btn btn-ghost">Получить КП</a>
+      <div class="muted-sm" id="roi-save-note"></div>
+    </div>
+  </div>
+
+  <div class="roi-grid">
+    <!-- ===== параметры ===== -->
+    <div class="roi-params">
+      <div class="roi-panel-title">Параметры хозяйства</div>
+
+      <div class="param">
+        <label>Режим работы <span class="hint" title="Собственная работа — вы обрабатываете свои поля. Оказание услуг — работаете на сторонние хозяйства.">i</span></label>
+        <div class="seg" id="mode-seg">
+          <button type="button" data-mode="own" class="on">Собственная работа</button>
+          <button type="button" data-mode="service">Оказание услуг</button>
+        </div>
+      </div>
+
+      <div class="param">
+        <label>Платформа</label>
+        <select id="p-model">
+          {% for m in models %}
+          <option value="{{ m.key }}" data-price="{{ m.price }}" data-perf="{{ m.perf }}"
+                  data-name="{{ m.name }}" {{ 'selected' if m.key == 't100' }}>
+            {{ m.name }} · {{ m.price|money }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="param">
+        <label>Площадь обработки <span class="hint" title="Физическая площадь полей за один проход.">i</span></label>
+        <div class="stepper">
+          <input type="text" inputmode="numeric" id="p-area" value="12 000">
+          <span class="unit">га</span>
+          <button type="button" data-step="-500" data-target="p-area">−</button>
+          <button type="button" data-step="500" data-target="p-area">+</button>
+        </div>
+      </div>
+
+      <div class="param">
+        <label>Культуры <span class="hint" title="Набор культур влияет на нормы вылива и производительность смены.">i</span></label>
+        <select id="p-crops">
+          {% for c in crop_sets %}
+          <option value="{{ c.key }}" data-rate="{{ c.rate }}">{{ c.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="param">
+        <label>Число обработок за сезон <span class="hint" title="Сколько раз площадь проходится за сезон.">i</span></label>
+        <div class="stepper">
+          <input type="text" inputmode="numeric" id="p-passes" value="4">
+          <span class="unit"></span>
+          <button type="button" data-step="-1" data-target="p-passes">−</button>
+          <button type="button" data-step="1" data-target="p-passes">+</button>
+        </div>
+      </div>
+
+      <div class="param">
+        <label id="price-label">Текущая стоимость гектара <span class="hint" title="Во сколько обходится обработка гектара сейчас — подрядом или наземной техникой.">i</span></label>
+        <div class="stepper">
+          <input type="text" inputmode="numeric" id="p-price" value="450">
+          <span class="unit">₽ / га</span>
+          <button type="button" data-step="-10" data-target="p-price">−</button>
+          <button type="button" data-step="10" data-target="p-price">+</button>
+        </div>
+      </div>
+
+      <div class="param">
+        <label>Сезонная загрузка <span class="hint" title="Число рабочих дней сезона.">i</span></label>
+        <div class="stepper">
+          <input type="text" inputmode="numeric" id="p-days" value="120">
+          <span class="unit">дней</span>
+          <button type="button" data-step="-5" data-target="p-days">−</button>
+          <button type="button" data-step="5" data-target="p-days">+</button>
+        </div>
+      </div>
+
+      <div class="scenario-box">
+        <h5>Сводка по сценарию</h5>
+        <div class="scenario-grid">
+          <div><span>Площадь</span><b id="s-area">12 000 га</b></div>
+          <div><span>Обработок</span><b id="s-passes">4</b></div>
+          <div><span>Стоимость гектара</span><b id="s-price">450 ₽/га</b></div>
+          <div><span>Сезон</span><b id="s-days">120 дней</b></div>
+        </div>
+      </div>
+
+      <div class="card solo" style="margin-top:20px;display:flex;gap:14px;align-items:center;">
+        <div style="width:130px;flex-shrink:0;">
+          {% with img_id = 'unit-img', src_id = 'unit-src' %}
+            {% include 'partials/drone.html' %}
+          {% endwith %}
+        </div>
+        <div>
+          <b style="font-size:13.5px;" id="unit-name">DJI T100</b>
+          <div class="muted-sm">Платформа для обработки, внесения гранул и погрузки.</div>
+          <a href="/configurator" class="link-accent" style="margin-top:8px;">Подробнее о платформе →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== результаты ===== -->
+    <div class="roi-results">
+      <div class="roi-panel-title">
+        Результаты расчёта
+        <button type="button" class="btn btn-ghost btn-sm" onclick="window.print()">Скачать / печать</button>
+      </div>
+
+      <div class="res-tiles">
+        <div class="res-tile">
+          <div class="rl">Стоимость обработки 1 га</div>
+          <div class="rv" id="r-cost">190 <small>₽ / га</small></div>
+        </div>
+        <div class="res-tile">
+          <div class="rl" id="r-saving-label">Экономия за сезон</div>
+          <div class="rv" id="r-saving">12,5 <small>млн ₽</small></div>
+        </div>
+        <div class="res-tile">
+          <div class="rl">Затраты после внедрения</div>
+          <div class="rv" id="r-after">9,12 <small>млн ₽</small></div>
+        </div>
+        <div class="res-tile">
+          <div class="rl">Окупаемость</div>
+          <div class="rv" id="r-payback">7 <small>месяцев</small></div>
+        </div>
+      </div>
+
+      <div class="chart-box">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+          <b style="font-size:13px;">Денежный поток · 24 месяца</b>
+          <div class="chart-legend">
+            <span><i></i>Денежный поток</span>
+            <span><i class="dash"></i>Точка окупаемости</span>
+          </div>
+        </div>
+        <svg id="roi-chart" viewBox="0 0 760 320" width="100%" height="320" role="img"
+             aria-label="График накопленного денежного потока за 24 месяца"></svg>
+      </div>
+
+      <p class="roi-note">
+        Предварительный расчёт по указанным параметрам хозяйства. Учитываются экипаж, ресурс
+        аккумуляторов, ТО и логистика; стоимость СЗР и семян не включена. Результат сохраняется
+        в личном кабинете.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/roi.js"></script>
+{% endblock %}

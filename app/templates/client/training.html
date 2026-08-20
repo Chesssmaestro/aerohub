@@ -1,0 +1,50 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set training = deal.training %}
+<div class="page-head">
+  <h1>Обучение операторов</h1>
+  <p>Аттестация операторов обязательна до ввода техники в эксплуатацию (DEL-460).
+     Результат фиксируется в цифровом паспорте техники.</p>
+</div>
+
+<div class="col-1-2">
+  <div class="card solo">
+    <h4>Курс операторов</h4>
+    <div class="doc-row"><span>Дата</span><span class="doc-status">{{ training.date_label }}</span></div>
+    <div class="doc-row"><span>Участники</span><span class="doc-status">{{ training.participants }} человека</span></div>
+    <div class="doc-row"><span>Статус</span>
+      <span class="doc-status {{ 'ok' if training.confirmed else 'warn' }}">
+        {{ 'Подтверждено' if training.confirmed else 'Ожидает подтверждения' }}</span></div>
+    {% if training.confirmed %}
+      <div class="form-ok" style="margin-top:14px;">
+        Дата подтверждена {{ training.confirmed_at|ru_date }}. Начальник АУЦ свяжется с вами по программе курса.
+      </div>
+    {% else %}
+      <form action="/cabinet/training/confirm" method="post" style="margin-top:14px;">
+        <button class="btn btn-primary btn-block">Подтвердить дату обучения</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div>
+    <section class="block" style="margin-top:0;">
+      <div class="block-head"><h2>Программа</h2><span class="block-note">два дня, теория и практика</span></div>
+      <div class="task-list">
+        <div class="task-item"><div class="task-date">День 1</div>
+          <div class="task-body"><b>Теория и регламенты</b><span>Устройство платформы, режимы полёта, нормы вылива, безопасность, ограничения воздушного пространства.</span></div></div>
+        <div class="task-item"><div class="task-date">День 2</div>
+          <div class="task-body"><b>Практика и допуск</b><span>Построение маршрута по карте поля, калибровка, работа с RTK, отработка сценариев, аттестация операторов.</span></div></div>
+        <div class="task-item"><div class="task-date">После</div>
+          <div class="task-body"><b>Ввод в эксплуатацию</b><span>Фиксация результата в цифровом паспорте и старт истории обработок.</span></div></div>
+      </div>
+    </section>
+
+    <div class="oq-box draft" style="margin-top:26px;">
+      <h3>◆ Важно</h3>
+      <p>Необученный оператор не допускается к практической работе. Если состав операторов
+         изменился — сообщите специалисту до начала курса.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set delivery = deal.delivery %}
+{% set training = deal.training %}
+
+<div class="page-head">
+  <div class="head-row">
+    <h1>Поставка {{ deal.product }}</h1>
+    <span class="status-chip accent">{{ delivery.status }}</span>
+  </div>
+  <p>{{ delivery.origin }} → {{ delivery.destination }} · прибытие {{ delivery.eta_label }} ·
+     прогресс {{ delivery.progress }}%</p>
+</div>
+
+<div class="col-2-1">
+  <div>
+    <div class="route-box">
+      <div class="route-head">
+        <div class="rh-label">Маршрут поставки</div>
+        <div style="display:flex;gap:28px;">
+          <div><div class="rh-label">Текущий статус</div><b style="color:var(--blue);font-size:13px;">{{ delivery.status }}</b></div>
+          <div><div class="rh-label">Прогресс</div><b style="color:var(--accent);font-size:15px;font-family:'Unbounded';">{{ delivery.progress }}%</b></div>
+          <div><div class="rh-label">Плановое прибытие</div><b style="color:var(--blue);font-size:15px;font-family:'Unbounded';">{{ delivery.eta_label }}</b></div>
+        </div>
+      </div>
+
+      {% include 'partials/route_map.html' %}
+
+      <div class="route-track">
+        {% for e in deal.events if e.kind == 'delivery' %}
+        <div class="rt-node {{ e.status }}">
+          <i></i>
+          <b>{{ e.title }}</b>
+          <span>{{ e.date_label }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:24px;">
+      <section class="block" style="margin-top:0;">
+        <div class="block-head"><h2>Ближайшие события</h2></div>
+        <div class="task-list">
+          <div class="task-item"><div class="task-date">20.09</div>
+            <div class="task-body"><b>Второй платёж</b><span>{{ stats.rest_share }}%, {{ stats.rest|money }}</span></div></div>
+          <div class="task-item"><div class="task-date">{{ delivery.eta_label }}</div>
+            <div class="task-body"><b>Плановое прибытие</b><span>{{ delivery.destination }}</span></div></div>
+          {% if training %}
+          <div class="task-item"><div class="task-date">25–26.09</div>
+            <div class="task-body"><b>Обучение операторов</b><span>{{ training.participants }} участника</span></div></div>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="block" style="margin-top:0;">
+        <div class="block-head"><h2>Журнал событий</h2></div>
+        <div class="log-list">
+          {% for e in deal.events if e.kind == 'delivery' %}
+          <div class="log-item">
+            <span class="log-dot {{ 'accent' if e.status == 'current' }}">{{ '✓' if e.status == 'done' else '•' }}</span>
+            <span class="log-date">{{ e.date_label }}</span>
+            <span class="log-text">{{ e.title }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div>
+    <div class="card solo">
+      <h4>Оплата · схема {{ stats.paid_share }}/{{ stats.rest_share }}</h4>
+      <div class="pay-bar"><i style="width:{{ stats.paid_share }}%"></i></div>
+      {% for p in deal.payments %}
+      <div class="doc-row">
+        <span>{{ p.share }}% · {{ p.due_label }}</span>
+        <span class="doc-status {{ '' if p.paid else 'warn' }}">{{ p.status|upper }}</span>
+      </div>
+      {% endfor %}
+      <a href="/cabinet/payment" class="link-accent" style="margin-top:12px;">Открыть детали оплаты →</a>
+    </div>
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Документы</h4>
+      {% for d in deal.documents %}
+      <div class="doc-row"><span>{{ d.title }}</span>
+        <span class="doc-status {{ d.status_tone }}">{{ d.status }}</span></div>
+      {% endfor %}
+    </div>
+
+    {% if training %}
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Обучение</h4>
+      <div class="doc-row"><span>{{ training.date_label }}</span>
+        <span class="doc-status {{ 'ok' if training.confirmed else 'warn' }}">
+          {{ 'Подтверждено' if training.confirmed else 'Ожидает подтверждения' }}</span></div>
+      <div class="muted-sm">Курс операторов · {{ training.participants }} участника</div>
+      {% if not training.confirmed %}
+      <form action="/cabinet/training/confirm" method="post" style="margin-top:12px;">
+        <button class="btn btn-primary btn-block btn-sm">Подтвердить дату</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Учёт и ЭПР</h4>
+      {% for a in deal.accounting %}
+      <div class="doc-row"><span>{{ a.title }}</span><span class="doc-status">{{ a.status }}</span></div>
+      {% endfor %}
+      <a href="/cabinet/accounting" class="link-accent" style="margin-top:12px;">Подробнее →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

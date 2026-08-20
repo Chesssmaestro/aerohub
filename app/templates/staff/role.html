@@ -1,0 +1,111 @@
+{% extends 'staff/_base.html' %}
+
+{% block section %}
+{% set rules = role.rules | selectattr('kind', 'equalto', 'rule') | list %}
+{% set forbidden = role.rules | selectattr('kind', 'equalto', 'forbidden') | list %}
+{% set audit = role.rules | selectattr('kind', 'equalto', 'audit') | list %}
+
+<div class="role-head">
+  <div>
+    <h1>{{ role.name }}</h1>
+    <div class="role-dept-tag">{{ role.dept_tag }}</div>
+  </div>
+  <span class="status-chip {{ role.status }}">
+    {{ 'Черновик — не в реестре' if role.status == 'draft' else 'Документы: Review' }}
+  </span>
+</div>
+<p class="approver">{{ role.approver }}</p>
+
+<div class="kpi-row">
+  {% for k in role.kpis %}
+  <div class="kpi-card">
+    <div class="kl">{{ k.label }}</div>
+    <div class="kv">{{ k.value }}</div>
+    {% if k.red_line %}<div class="kr">красный порог: <b>{{ k.red_line }}</b></div>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Мои процессы</h2><span class="block-note">Владелец по реестру L1/L2</span></div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Код</th><th>Процесс</th><th>Результат</th><th>KPI / SLA</th></tr></thead>
+      <tbody>
+        {% for p in role.processes %}
+        <tr>
+          <td class="proc-code">{{ p.code }}</td>
+          <td class="proc-name">{{ p.name }}</td>
+          <td class="proc-kpi">{{ p.result }}</td>
+          <td class="proc-kpi">{{ p.kpi }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if role.highlight %}
+<section class="block">
+  <div class="block-head"><h2>Где я в маршруте платного ремонта</h2>
+    <span class="block-note">13 стадий · SRV OS §6</span></div>
+  <div class="pipeline">
+    {% for p in pipeline %}
+    <div class="pipe-step {{ 'mine' if loop.index0 in role.highlight }}">
+      <div class="pn">{{ '%02d'|format(loop.index) }}</div>
+      <div class="pt">{{ p }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="block two-col">
+  <div>
+    <div class="block-head"><h2>Правила, которые касаются меня</h2></div>
+    <ul class="rule-list">
+      {% for r in rules %}<li>{{ r.text }}</li>{% endfor %}
+    </ul>
+    {% if forbidden %}
+    <div class="block" style="margin-top:22px;">
+      <div class="block-head"><h2 style="color:var(--bad)">Запрещено</h2></div>
+      <ul class="rule-list forbidden">
+        {% for r in forbidden %}<li>{{ r.text }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  <div>
+    <div class="block-head"><h2>Ближайшие задачи запуска</h2></div>
+    <div class="task-list">
+      {% for t in role.tasks %}
+      <div class="task-item">
+        <div class="task-date">{{ t.date_label }}</div>
+        <div class="task-body"><b>{{ t.title }}</b><span>{{ t.note }}</span></div>
+      </div>
+      {% else %}
+      <p class="empty">Нет задач с датой, привязанных к этой роли в критическом пути.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if audit %}
+<section class="block">
+  <div class="block-head"><h2>Еженедельная выборка / аудит</h2></div>
+  <ul class="rule-list">
+    {% for r in audit %}<li>{{ r.text }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if role.open_questions %}
+<div class="oq-box {{ 'draft' if role.status == 'draft' }}">
+  <h3>{{ '◆ Статус черновика' if role.status == 'draft' else '⚠ Открытые вопросы' }}</h3>
+  <p>{{ role.open_questions }}</p>
+</div>
+{% endif %}
+
+<footer class="f">АЭРОХАБ · единая карточка процессов · открытие зафиксировано до 1 сентября 2026 ·
+  сверено с Enterprise Process Architecture, RACI/DoA и профильными OS-документами</footer>
+{% endblock %}

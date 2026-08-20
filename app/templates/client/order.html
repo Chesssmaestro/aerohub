@@ -1,0 +1,136 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set invoice = deal.documents | selectattr('doc_type', 'equalto', 'invoice') | selectattr('has_file') | list | last %}
+{% set receipts = deal.documents | selectattr('doc_type', 'equalto', 'receipt') | selectattr('has_file') | list %}
+
+<div class="page-head">
+  <div class="head-row">
+    <h1>Заказ №{{ deal.number }}</h1>
+    <span class="status-chip {{ 'accent' if stage_key != 'done' else 'ok' }}">{{ stage.title }}</span>
+    <a href="/cabinet/orders" class="link-accent">← ко всем заказам</a>
+  </div>
+  <p>{{ deal.product }} «{{ deal.package }}» · {{ deal.amount|money }} ·
+     оформлен {{ deal.created_at|ru_date }}</p>
+</div>
+
+{% if error %}<div class="form-error">{{ error }}</div>{% endif %}
+
+<div class="status-stepper">
+  {% for s in deal.stages %}
+  <div class="step {{ s.status }}">
+    <div class="sn">{{ '%02d'|format(loop.index) }}</div>
+    <div class="st">{{ s.title }}</div>
+    <div class="sd">{{ s.date_label }}</div>
+    <div class="sm">{{ s.note }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="col-2-1">
+  <div>
+    <div class="card solo" style="border-left:2px solid var(--accent);">
+      <h4>Этап {{ stage.number }} из {{ stage.total }} <span class="mono" style="color:var(--accent);">№{{ deal.number }}</span></h4>
+      <div style="font-family:'Unbounded';font-size:17px;">{{ stage.title }}</div>
+      <p class="muted-sm" style="margin-top:8px;">{{ stage.client }}</p>
+
+      {% if can_upload_receipt %}
+      <form method="post" action="/cabinet/orders/{{ deal.id }}/documents"
+            enctype="multipart/form-data" style="margin-top:16px;">
+        <input type="hidden" name="doc_type" value="receipt">
+        <div class="f-two">
+          <div class="f-row">
+            <label>Чек / платёжное поручение</label>
+            <input type="file" name="file" required>
+          </div>
+          <div class="f-row">
+            <label>Название (необязательно)</label>
+            <input type="text" name="title" placeholder="Чек об оплате счёта">
+          </div>
+        </div>
+        <button class="btn btn-primary">Приложить чек об оплате</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <section class="block">
+      <div class="block-head"><h2>Документы заказа</h2>
+        <span class="block-note">{{ files|length }} файл(ов)</span></div>
+      <div class="table-wrap">
+        <table class="proc-table">
+          <thead><tr><th>Документ</th><th>Тип</th><th>Файл</th><th>Размер</th><th>Дата</th><th></th></tr></thead>
+          <tbody>
+            {% for d in files %}
+            <tr>
+              <td class="proc-name">{{ d.title }}</td>
+              <td><span class="doc-status {{ 'warn' if d.doc_type == 'invoice' else ('blue' if d.doc_type == 'receipt' else 'dim') }}">{{ d.type_label }}</span></td>
+              <td class="proc-kpi">{{ d.file_name }}</td>
+              <td class="proc-kpi">{{ d.size_label }}</td>
+              <td class="proc-code">{{ d.date_label }}</td>
+              <td><a class="btn btn-outline btn-sm" href="/files/{{ d.id }}">Скачать</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="empty">Документов по заказу пока нет.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>История заказа</h2><span class="block-note">все действия сторон</span></div>
+      <div class="task-list">
+        {% for e in deal.events|reverse if e.kind == 'deal' %}
+        <div class="task-item">
+          <div class="task-date">{{ e.date_label }}</div>
+          <div class="task-body"><b>{{ e.title }}</b><span>{{ e.note }}</span></div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <div class="card solo">
+      <h4>Оплата</h4>
+      {% if invoice %}
+        <div class="doc-row"><span>{{ invoice.title }}</span>
+          <span class="doc-status warn">{{ deal.amount|money }}</span></div>
+        <div class="muted-sm">Выставлен {{ invoice.date_label }}</div>
+        <a class="btn btn-outline btn-block" href="/files/{{ invoice.id }}" style="margin-top:12px;">
+          Скачать счёт</a>
+      {% else %}
+        <p class="muted-sm">Счёт ещё не выставлен — менеджер подготовит его после согласования.</p>
+      {% endif %}
+      {% for r in receipts %}
+      <div class="doc-row" style="margin-top:10px;">
+        <span>{{ r.title }}</span>
+        <span class="doc-status blue">{{ 'принят' if stage_key in ('paid', 'shipped', 'done') else 'на проверке' }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Состав заказа</h4>
+      {% for c in deal.config_items if c.section == 'spec' %}
+      <div class="doc-row"><span>{{ c.title }}</span><span class="doc-status dim">{{ c.note }}</span></div>
+      {% endfor %}
+      <div class="doc-row" style="border-top:1px solid var(--line-bright);">
+        <span>Итого</span><span class="doc-status">{{ deal.amount|money }}</span>
+      </div>
+      {% if deal.comment %}
+      <p class="muted-sm" style="margin-top:12px;">Ваш комментарий: {{ deal.comment }}</p>
+      {% endif %}
+    </div>
+
+    {% if deal.delivery %}
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Поставка</h4>
+      <div class="doc-row"><span>Статус</span><span class="doc-status">{{ deal.delivery.status }}</span></div>
+      <div class="doc-row"><span>Куда</span><span class="doc-status dim">{{ deal.delivery.destination }}</span></div>
+      <div class="pay-bar" style="margin-top:10px;"><i style="width:{{ deal.delivery.progress }}%"></i></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

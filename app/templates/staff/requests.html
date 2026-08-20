@@ -1,0 +1,85 @@
+{% extends 'staff/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Входящие заявки</h1>
+  <p>Заявки с сайта и из кабинетов клиентов, оптовые заявки поставщиков и последние расчёты
+     ROI-калькулятора. Норматив первого контакта — 30 минут (SAL-210).</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card"><div class="kl">Заявок всего</div><div class="kv">{{ requests|length }}</div></div>
+  <div class="kpi-card"><div class="kl">Новых</div>
+    <div class="kv">{{ requests|selectattr('status', 'equalto', 'Новая')|list|length }}</div></div>
+  <div class="kpi-card"><div class="kl">Оптовых заявок</div><div class="kv">{{ dealer_orders|length }}</div></div>
+  <div class="kpi-card"><div class="kl">Клиентов поставщиков</div><div class="kv">{{ leads|length }}</div></div>
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Заявки клиентов</h2><span class="block-note">форма КП и обращения из кабинета</span></div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Дата</th><th>Кто</th><th>Контакты</th><th>Хозяйство</th><th>Источник</th><th>Задача</th></tr></thead>
+      <tbody>
+        {% for r in requests %}
+        <tr>
+          <td class="proc-code">{{ r.created_at|ru_date }}</td>
+          <td class="proc-name">{{ r.name }}</td>
+          <td class="proc-kpi">{{ r.phone }}{% if r.phone and r.email %}<br>{% endif %}{{ r.email }}</td>
+          <td class="proc-kpi">{{ r.farm or '—' }}{% if r.area %} · {{ r.area }} га{% endif %}</td>
+          <td><span class="doc-status {{ 'blue' if 'Кабинет' in r.source else '' }}">{{ r.source }}</span></td>
+          <td class="proc-kpi">{{ r.comment or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty">Заявок пока нет.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="two-col" style="margin-top:32px;">
+  <section class="block" style="margin-top:0;">
+    <div class="block-head"><h2>Оптовые заявки поставщиков</h2></div>
+    <div class="table-wrap">
+      <table class="proc-table">
+        <thead><tr><th>Модель</th><th>Кол-во</th><th>Статус</th><th>Дата</th></tr></thead>
+        <tbody>
+          {% for o in dealer_orders %}
+          <tr>
+            <td class="proc-name">{{ o.model }}</td>
+            <td class="proc-kpi">{{ o.qty }}</td>
+            <td><span class="doc-status {{ 'warn' if 'оплат' in o.status else '' }}">{{ o.status }}</span></td>
+            <td class="proc-code">{{ o.created_at|ru_date }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty">Заявок нет.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block" style="margin-top:0;">
+    <div class="block-head"><h2>Последние расчёты ROI</h2><span class="block-note">из калькулятора на сайте</span></div>
+    <div class="table-wrap">
+      <table class="proc-table">
+        <thead><tr><th>Площадь</th><th>Культуры</th><th>₽/га</th><th>Экономия</th><th>Окупаемость</th></tr></thead>
+        <tbody>
+          {% for c in roi_calcs %}
+          <tr>
+            <td class="proc-name">{{ c.area|number }} га</td>
+            <td class="proc-kpi">{{ c.crops }}</td>
+            <td class="proc-kpi">{{ c.cost_per_ha|number }}</td>
+            <td class="proc-kpi">{{ c.season_saving|mln }}</td>
+            <td class="proc-code">{{ c.payback_months|number(1) }} мес.</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="empty">Расчётов пока нет.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}

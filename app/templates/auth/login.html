@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Вход — АЭРОХАБ{% endblock %}
+
+{% block body %}
+<div class="auth-screen">
+  <a href="/" class="login-brand">
+    {% include 'partials/logo.html' %}
+    <div><b>АЭРОХАБ</b><span>Единый вход · {{ company.city }}</span></div>
+  </a>
+
+  {% if not portal %}
+    <div class="portal-picker">
+      {% for p in portals %}
+      <a class="portal-card" href="/login?portal={{ p.key }}{% if next %}&next={{ next }}{% endif %}">
+        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none">{{ p.icon|safe }}</svg></div>
+        <h3>{{ p.title }}</h3>
+        <p>{{ p.text }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="auth-switch">Ещё нет доступа? <a href="/register">Зарегистрироваться</a></p>
+  {% else %}
+    <form class="login-form" method="post" action="/login">
+      <a class="lf-back" href="/login">← выбрать другой кабинет</a>
+      <h3>Вход — {{ portal_title|lower }}</h3>
+      {% if error %}<div class="form-error">{{ error }}</div>{% endif %}
+      <input type="hidden" name="portal" value="{{ portal }}">
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="f-row">
+        <label>Почта</label>
+        <input type="email" name="email" value="{{ email or '' }}" placeholder="ivan@agrokom.ru" required>
+      </div>
+      <div class="f-row">
+        <label>Пароль</label>
+        <input type="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Войти</button>
+      <p class="demo-note">
+        Демо-доступы (пароль <b>demo12345</b>):<br>
+        покупатель — client@agrokom.ru<br>
+        поставщик — dealer@agroteh.ru<br>
+        сотрудник — ceo@aerohub.ru, sales_head@aerohub.ru, service_head@aerohub.ru
+      </p>
+    </form>
+    <p class="auth-switch">Нет аккаунта? <a href="/register?portal={{ portal }}">Зарегистрироваться</a></p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set platform = deal.config_items | selectattr('section', 'equalto', 'platform') | list %}
+{% set scenarios = deal.config_items | selectattr('section', 'equalto', 'scenario') | list %}
+{% set equipment = deal.config_items | selectattr('section', 'equalto', 'equipment') | list %}
+{% set spec = deal.config_items | selectattr('section', 'equalto', 'spec') | list %}
+
+<div class="col-2-1">
+  <div>
+    <div class="unit-hero">
+      <div>
+        <div class="uh-eyebrow">Личный кабинет · комплектация</div>
+        <h1>Конфигурация {{ deal.product }}</h1>
+        <p>Соберите рабочую конфигурацию под задачи хозяйства: опрыскивание, внесение гранул
+           и транспортировка грузов.</p>
+        <div class="uh-status">Статус конфигурации — <b>согласование с клиентом</b></div>
+      </div>
+      <div>{% with drone = deal.product %}{% include 'partials/drone.html' %}{% endwith %}</div>
+    </div>
+
+    <div class="cards two" style="margin-top:24px;">
+      <div class="card">
+        <h4>① Базовая платформа <span class="status-chip ok">Включено</span></h4>
+        {% for p in platform %}
+        <div style="font-family:'Unbounded';font-size:15px;">{{ p.title }}</div>
+        <p class="muted-sm" style="margin-top:8px;">{{ p.note }}</p>
+        {% endfor %}
+      </div>
+      <div class="card">
+        <h4>② Рабочий сценарий</h4>
+        {% for s in scenarios %}
+        <div class="doc-row">
+          <span>{{ s.title }}</span>
+          <span class="doc-status {{ '' if s.included else 'dim' }}">
+            {{ 'Включено' if s.included else 'Доступно · ' ~ s.price|money }}
+          </span>
+        </div>
+        <div class="muted-sm">{{ s.note }}</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <section class="block">
+      <div class="block-head"><h2>③ Дополнительное оснащение</h2>
+        <span class="block-note">отметки согласованы с менеджером</span></div>
+      <div class="card solo">
+        {% for e in equipment %}
+        <div class="opt-row">
+          <span class="opt-box {{ 'on' if e.included }}">{{ '✓' if e.included }}</span>
+          <span class="opt-main"><b>{{ e.title }}</b><span>{{ e.note }}</span></span>
+          <span class="opt-price {{ '' if e.included }}">
+            {{ 'Включено' if e.included else e.price|money }}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>④ Спецификация поставки</h2>
+        <span class="block-note">{{ spec|selectattr('included')|list|length }} позиций включено</span></div>
+      <div class="table-wrap">
+        <table class="proc-table">
+          <thead><tr><th>Позиция</th><th>Кол-во</th><th>Статус</th><th>Комментарий</th></tr></thead>
+          <tbody>
+            {% for s in spec %}
+            <tr>
+              <td class="proc-name">{{ s.title }}</td>
+              <td class="proc-kpi">{{ s.qty }}</td>
+              <td><span class="doc-status {{ '' if s.included else 'dim' }}">{{ 'Включено' if s.included else '—' }}</span></td>
+              <td class="proc-kpi">{{ s.note }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <div class="card solo">
+      <h4>Итог</h4>
+      <div class="doc-row"><span>Пакет</span><span class="doc-status">{{ deal.product }} «{{ deal.package }}»</span></div>
+      <div class="doc-row"><span>Сценариев работы</span><span class="doc-status">{{ scenarios|length }}</span></div>
+      <div class="doc-row"><span>Позиций в поставке</span><span class="doc-status">{{ stats.positions }}</span></div>
+      <div class="doc-row"><span>Срок поставки</span><span class="doc-status">{{ deal.delivery.eta_label }}</span></div>
+      <div class="muted" style="margin-top:14px;">Стоимость комплекта</div>
+      <div class="del-progress" style="font-size:24px;">{{ deal.amount|mln }}</div>
+    </div>
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Финансирование</h4>
+      {% for p in deal.payments %}
+      <div class="doc-row">
+        <span>{{ 'Аванс' if p.paid else 'Остаток' }} {{ p.share }}%</span>
+        <span class="doc-status {{ '' if p.paid else 'warn' }}">{{ p.amount|mln }}</span>
+      </div>
+      {% endfor %}
+      <div class="pay-bar" style="margin-top:12px;"><i style="width:{{ stats.paid_share }}%"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-dim);">
+        <span>{{ stats.paid_share }}%</span><span>{{ stats.rest_share }}%</span>
+      </div>
+    </div>
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Документы по конфигурации</h4>
+      {% for d in deal.documents %}
+      <div class="doc-row"><span>{{ d.title }} · {{ d.kind }}</span>
+        <span class="doc-status {{ d.status_tone }}">{{ d.status }}</span></div>
+      {% endfor %}
+    </div>
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Действия</h4>
+      {% if sent %}<div class="form-ok">Запрос отправлен менеджеру.</div>{% endif %}
+      <form method="post" action="/cabinet/message">
+        <input type="hidden" name="topic" value="Комплектация">
+        <div class="f-row">
+          <label>Запросить корректировку</label>
+          <textarea name="text" placeholder="Например: добавить комплект для гранул и второй комплект аккумуляторов." required></textarea>
+        </div>
+        <button class="btn btn-primary btn-block">Согласовать комплектацию</button>
+      </form>
+      <a href="/cabinet/docs" class="btn btn-outline btn-block" style="margin-top:10px;">Скачать спецификацию</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

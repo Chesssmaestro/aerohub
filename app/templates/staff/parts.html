@@ -1,0 +1,101 @@
+{% extends 'staff/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Склад запчастей</h1>
+  <p>Единый каталог: цена и наличие, которые видит покупатель в разделе «Запчасти».
+     Правка сохраняется сразу — учёт остатков ведёт кладовщик (SCM-350/380).</p>
+</div>
+
+{% if saved %}<div class="form-ok">Изменения сохранены.</div>{% endif %}
+
+<div class="kpi-row">
+  <div class="kpi-card"><div class="kl">Позиций в каталоге</div><div class="kv">{{ catalog_size|number }}</div></div>
+  <div class="kpi-card"><div class="kl">В наличии</div><div class="kv">{{ in_stock|number }}</div></div>
+  <div class="kpi-card"><div class="kl">Найдено по фильтру</div><div class="kv">{{ total|number }}</div></div>
+  <div class="kpi-card"><div class="kl">Сумма прайса</div><div class="kv">{{ stock_value|mln }}</div></div>
+</div>
+
+<section class="block">
+  <div class="block-head">
+    <h2>Поиск по складу</h2>
+    <span class="block-note">страница {{ page }} из {{ pages }}</span>
+  </div>
+  <form method="get" action="/staff/parts" class="inline-form">
+    <div class="f-row">
+      <label>Название или артикул</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="насос, YC.JG…">
+    </div>
+    <div class="f-row">
+      <label>Узел</label>
+      <select name="group">
+        <option value="">все узлы</option>
+        {% for name, count in part_groups %}
+        <option value="{{ name }}" {{ 'selected' if group == name }}>{{ name }} ({{ count }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-outline btn-sm">Найти</button>
+    <a href="/staff/parts" class="btn btn-ghost btn-sm">Сбросить</a>
+  </form>
+</section>
+
+<section class="block">
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Артикул</th><th>Название</th><th>Узел</th><th>Совместимость</th>
+        <th>Цена, ₽</th><th>Наличие</th><th></th></tr></thead>
+      <tbody>
+        {% for p in parts %}
+        <tr>
+          <td class="proc-code"><a href="/parts/{{ p.id }}">{{ p.article }}</a></td>
+          <td class="proc-name">{{ p.name }}</td>
+          <td class="proc-kpi">{{ p.group }}<br><span class="muted">{{ p.kind }}</span></td>
+          <td class="proc-kpi">
+            {% for m in p.model_list[:4] %}<span class="chip">{{ m }}</span>{% endfor %}
+            {% if p.model_list|length > 4 %}<span class="chip">+{{ p.model_list|length - 4 }}</span>{% endif %}
+          </td>
+          <td colspan="3">
+            <form method="post" action="/staff/parts/{{ p.id }}"
+                  style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <input type="hidden" name="q" value="{{ q }}">
+              <input type="hidden" name="group" value="{{ group }}">
+              <input type="hidden" name="page" value="{{ page }}">
+              <input type="number" name="price" value="{{ p.price|int }}" min="0" step="10"
+                     style="width:110px;background:var(--bg);border:1px solid var(--line-bright);
+                            color:var(--text);padding:7px 9px;font-family:'JetBrains Mono';font-size:12px;">
+              <select name="stock" style="width:130px;background:var(--bg);border:1px solid var(--line-bright);
+                            color:var(--text);padding:7px 9px;font-size:12px;">
+                {% for s in ['Много', 'Мало', 'Под заказ', 'Нет', 'Снят с продажи'] %}
+                <option value="{{ s }}" {{ 'selected' if p.stock == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-ghost btn-sm">Сохранить</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">Ничего не найдено.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pager">
+    {% if page > 1 %}
+    <a class="btn btn-ghost btn-sm" href="/staff/parts?q={{ q }}&group={{ group }}&page={{ page - 1 }}">← назад</a>
+    {% endif %}
+    <span class="muted">{{ page }} / {{ pages }}</span>
+    {% if page < pages %}
+    <a class="btn btn-ghost btn-sm" href="/staff/parts?q={{ q }}&group={{ group }}&page={{ page + 1 }}">вперёд →</a>
+    {% endif %}
+  </div>
+</section>
+
+<div class="oq-box draft">
+  <h3>◆ Откуда данные</h3>
+  <p>Каталог загружен импортом из <span class="mono">data/parts.json</span>
+     (скрипт <span class="mono">tools/fetch_parts.py</span>). Повторный импорт обновляет цены
+     и наличие по артикулу, не создавая дублей.</p>
+</div>
+{% endblock %}

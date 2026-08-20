@@ -1,0 +1,58 @@
+{% extends 'dealer/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Ваши клиенты</h1>
+  <p>Хозяйства, которые вы ведёте. Стадия обновляется вручную до решения по ADR-EPA-101
+     о единой CRM для дилерского контура.</p>
+</div>
+
+<div class="col-2-1">
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Клиент</th><th>Стадия</th><th>Контакт</th><th>Заметка</th></tr></thead>
+      <tbody>
+        {% for l in leads %}
+        <tr>
+          <td class="proc-name">{{ l.name }}</td>
+          <td><span class="doc-status {{ 'blue' if l.stage == 'Новый лид' else '' }}">{{ l.stage }}</span></td>
+          <td class="proc-kpi">{{ l.contact or '—' }}</td>
+          <td class="proc-kpi">{{ l.note or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="empty">Клиентов пока нет — добавьте первого справа.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card solo">
+    <h4>Добавить клиента</h4>
+    <form method="post" action="/dealer/clients">
+      <div class="f-row">
+        <label>Название</label>
+        <input type="text" name="name" placeholder="КФХ Воронов" required>
+      </div>
+      <div class="f-row">
+        <label>Стадия</label>
+        <select name="stage">
+          <option>Новый лид</option>
+          <option>Переговоры</option>
+          <option>КП отправлено</option>
+          <option>Счёт выставлен</option>
+          <option>Сделка закрыта</option>
+        </select>
+      </div>
+      <div class="f-row">
+        <label>Контакт</label>
+        <input type="text" name="contact" placeholder="+7 918 000-00-00">
+      </div>
+      <div class="f-row">
+        <label>Заметка</label>
+        <textarea name="note" placeholder="Площадь, культуры, интересующая модель."></textarea>
+      </div>
+      <button class="btn btn-primary btn-block">Добавить</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Сервис</h1>
+  <p>Приёмка с актом и фотофиксацией, диагностика, независимый контроль качества ремонта.
+     Гарантия на работы — 14 календарных дней.</p>
+</div>
+
+<div class="col-2-1">
+  <div>
+    {% for t in deal.tickets %}
+    <div class="card solo" style="margin-bottom:1px;">
+      <h4>Сервисное обращение №{{ t.number }} <span class="status-chip blue">{{ t.status }}</span></h4>
+      <div class="doc-row"><span>{{ t.title }}</span><span class="doc-status">{{ t.date_label }}</span></div>
+      <p class="muted-sm" style="margin-top:8px;">{{ t.note }}</p>
+    </div>
+    {% else %}
+    <p class="empty">Обращений нет.</p>
+    {% endfor %}
+
+    <section class="block">
+      <div class="block-head"><h2>Маршрут платного ремонта</h2><span class="block-note">13 стадий · SRV OS §6</span></div>
+      <div class="pipeline">
+        {% for p in pipeline %}
+        <div class="pipe-step"><div class="pn">{{ '%02d'|format(loop.index) }}</div><div class="pt">{{ p }}</div></div>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <div class="card solo">
+      <h4>Как открыть обращение</h4>
+      <form method="post" action="/cabinet/message">
+        <input type="hidden" name="topic" value="Сервис">
+        <div class="f-row">
+          <label>Опишите неисправность</label>
+          <textarea name="text" placeholder="Что произошло, при каких условиях, наработка, серийный номер." required></textarea>
+        </div>
+        <button class="btn btn-primary btn-block">Отправить в сервис</button>
+      </form>
+      <p class="demo-note">Координатор регистрирует обращение в течение 10 минут в рабочее время,
+         диагностика стартует в течение рабочего дня.</p>
+    </div>
+
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Правила, которые вас защищают</h4>
+      <ul class="rule-list">
+        <li>Без акта, фото и идентификации техника не переводится в диагностику.</li>
+        <li>Согласование ремонта — только письменно, устных согласований нет.</li>
+        <li>Инженер, выполнявший ремонт, не подтверждает собственный QC.</li>
+        <li>Статус обновляется не реже раза в рабочий день.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

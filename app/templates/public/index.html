@@ -1,0 +1,141 @@
+{% extends 'public_base.html' %}
+{% block title %}АЭРОХАБ — агродроны DJI Agras: поставка, сервис, цифровой кабинет{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="pub-wrap hero-inner">
+    <div>
+      <div class="eyebrow">Агродроны DJI Agras · {{ company.city }}</div>
+      <h1>Сделка, поставка<br>и эксплуатация —<br>в одном кабинете</h1>
+      <p class="lead">
+        Поставляем и обслуживаем DJI Agras: комплектация под задачи хозяйства, договор и оплата,
+        доставка, обучение операторов, постановка на учёт и сервис. Все этапы после заявки собраны
+        в одной рабочей среде — покупателю, поставщику и сотруднику видно одно и то же состояние сделки.
+      </p>
+      <div class="hero-actions">
+        <a href="/kp" class="btn btn-primary">Получить КП</a>
+        <a href="/roi" class="btn btn-outline">Рассчитать окупаемость</a>
+        <a href="/register" class="btn btn-ghost">Регистрация в кабинете</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hv-label">DJI T100 · флагманская платформа</div>
+      {% include 'partials/drone.html' %}
+      <div class="doc-row"><span>Бак опрыскивания</span><span class="doc-status">100 л</span></div>
+      <div class="doc-row"><span>Полезная нагрузка</span><span class="doc-status">до 100 кг</span></div>
+      <div class="doc-row"><span>Рабочая ширина</span><span class="doc-status">5–13 м</span></div>
+      <div class="doc-row"><span>Сценарии</span><span class="doc-status">опрыскивание · гранулы · грузы</span></div>
+    </div>
+  </div>
+  <div class="pub-wrap">
+    <div class="stat-strip">
+      <div class="st"><b>3 480 га</b><span>обработано техникой клиентов за сезон 2026</span></div>
+      <div class="st"><b>145 га/день</b><span>средняя производительность флагмана</span></div>
+      <div class="st"><b>≤10 дней</b><span>норматив подготовки и поставки комплекта</span></div>
+      <div class="st"><b>7 месяцев</b><span>типовая окупаемость на 12 000 га</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="spraying">
+  <div class="pub-wrap">
+    <div class="sec-head">
+      <h2>Интеллектуальная обработка</h2>
+      <p>Опрыскивание, внесение гранул и транспортировка грузов на одной платформе.
+         Маршрут строится по карте поля, норма вылива удерживается автоматически.</p>
+    </div>
+    <div class="tile-grid">
+      <div class="tile">
+        <div class="t-ico"><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M12 3v7M7 10h10l-2 8H9L7 10z" stroke="currentColor" stroke-width="1.6"/><path d="M9 21h6" stroke="currentColor" stroke-width="1.6"/></svg></div>
+        <h3>Опрыскивание</h3>
+        <p>Бак до 100 л, подача до 40 л/мин, рабочая ширина 5–13 м. Норма удерживается при изменении
+           скорости — по данным RTK и радара рельефа.</p>
+      </div>
+      <div class="tile">
+        <div class="t-ico"><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M5 8h14l-2 11H7L5 8z" stroke="currentColor" stroke-width="1.6"/><path d="M9 8V5h6v3" stroke="currentColor" stroke-width="1.6"/></svg></div>
+        <h3>Внесение гранул</h3>
+        <p>Бункер 150 л и система дозирования: подкормка, посев покровных культур, разбрасывание
+           по заданной норме.</p>
+      </div>
+      <div class="tile" id="cargo">
+        <div class="t-ico"><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><rect x="4" y="8" width="16" height="10" stroke="currentColor" stroke-width="1.6"/><path d="M4 12h16M12 8v10" stroke="currentColor" stroke-width="1.6"/></svg></div>
+        <h3>Транспортировка грузов</h3>
+        <p>Грузовая подвеска и крепления: доставка СЗР, воды и оборудования в поле, где не проходит
+           наземная техника.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:0;">
+  <div class="pub-wrap">
+    <div class="sec-head">
+      <h2>Линейка платформ</h2>
+      <p>Подбираем модель под площадь, культуры и сценарий работы. Цена указана за базовую
+         комплектацию, точный состав — в конфигураторе.</p>
+    </div>
+    <div class="model-grid">
+      {% for m in models %}
+      <div class="model">
+        {% with drone = m.key %}{% include 'partials/drone.html' %}{% endwith %}
+        <div class="m-name" style="margin-top:12px;">{{ m.name }}</div>
+        <div class="m-tag">{{ m.tag }}</div>
+        <ul>
+          <li><span>Бак</span><b>{{ m.tank }}</b></li>
+          <li><span>Смена</span><b>{{ m.shift }}</b></li>
+          <li><span>Ширина</span><b>{{ m.width }}</b></li>
+        </ul>
+        <div class="m-price">{{ m.price|money }}</div>
+        <a href="/configurator" class="link-accent" style="margin-top:14px;">Собрать комплектацию →</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="platform" style="padding-top:0;">
+  <div class="pub-wrap">
+    <div class="sec-head">
+      <h2>Цифровая платформа</h2>
+      <p>Три кабинета на одних данных: покупатель видит свою сделку, поставщик — свои заявки и клиентов,
+         сотрудник — процессы, KPI и правила своей роли.</p>
+    </div>
+    <div class="tile-grid">
+      <div class="tile">
+        <div class="t-ico"><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M4 20v-2a4 4 0 014-4h8a4 4 0 014 4v2" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="7" r="3.4" stroke="currentColor" stroke-width="1.6"/></svg></div>
+        <h3>Покупатель</h3>
+        <p>Статус сделки, комплектация, документы, график оплаты 30/70, маршрут поставки, обучение,
+           учёт и ЭПР, история обработок и сервис.</p>
+      </div>
+      <div class="tile">
+        <div class="t-ico"><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6" stroke="currentColor" stroke-width="1.6"/></svg></div>
+        <h3>Поставщик</h3>
+        <p>Оптовые заявки и резервы склада, собственные клиенты, уровень и матрица цен,
+           материалы и обучение специалистов.</p>
+      </div>
+      <div class="tile">
+        <div class="t-ico"><svg viewBox="0 0 24 24" fill="none" width="26" height="26"><rect x="3" y="4" width="18" height="16" rx="1" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M8 4v5" stroke="currentColor" stroke-width="1.6"/></svg></div>
+        <h3>Сотрудник</h3>
+        <p>Карточка роли: процессы и их результат, KPI с красными порогами, правила и запреты,
+           задачи запуска, входящие заявки.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" style="padding-top:0;">
+  <div class="pub-wrap">
+    <div class="cta-band">
+      <div>
+        <h2>Посчитайте экономику под своё хозяйство</h2>
+        <p>Калькулятор собирает стоимость обработки гектара, сезонную экономию и срок окупаемости
+           в финансовую модель, пригодную для предварительного обсуждения.</p>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;position:relative;">
+        <a href="/roi" class="btn btn-primary">Рассчитать под своё хозяйство →</a>
+        <a href="/kp" class="btn btn-ghost">Получить КП</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

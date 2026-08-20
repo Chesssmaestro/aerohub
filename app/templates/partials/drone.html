@@ -1,0 +1,11 @@
+{# Фото платформы. Принимает drone — ключ модели ('t25') или её название ('DJI T70').
+   Для T50 своего снимка нет, показываем ближайший по классу T70. #}
+{% set raw = (drone | default('t100')) | lower | replace('dji', '') | replace(' ', '') %}
+{% set key = raw if raw in ('t25', 't70', 't100') else ('t70' if raw == 't50' else 't100') %}
+{% set names = {'t25': 'DJI Agras T25', 't70': 'DJI Agras T70', 't100': 'DJI Agras T100'} %}
+<picture>
+  <source srcset="/static/img/drone-{{ key }}.webp" type="image/webp"
+          {% if src_id %}id="{{ src_id }}"{% endif %}>
+  <img class="drone-art" src="/static/img/drone-{{ key }}.png" loading="lazy" decoding="async"
+       {% if img_id %}id="{{ img_id }}"{% endif %} alt="Агродрон {{ names[key] }}">
+</picture>

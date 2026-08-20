@@ -1,0 +1,52 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Моя сделка</h1>
+  <p>{{ deal.product }} «{{ deal.package }}» · договор №{{ deal.number }} ·
+     стоимость комплекта {{ deal.amount|mln }}</p>
+</div>
+
+<div class="status-stepper">
+  {% for s in deal.stages %}
+  <div class="step {{ s.status }}">
+    <div class="sn">0{{ loop.index }}</div>
+    <div class="st">{{ s.title }}</div>
+    <div class="sd">{{ s.date_label }}</div>
+    <div class="sm">{{ s.note }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="two-col">
+  <section class="block" style="margin-top:0;">
+    <div class="block-head"><h2>Журнал сделки</h2><span class="block-note">все этапы после заявки</span></div>
+    <div class="task-list">
+      {% for e in deal.events if e.kind == 'deal' %}
+      <div class="task-item">
+        <div class="task-date">{{ e.date_label }}</div>
+        <div class="task-body"><b>{{ e.title }}</b><span>{{ e.note }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="block" style="margin-top:0;">
+    <div class="block-head"><h2>Условия</h2></div>
+    <div class="card solo">
+      <div class="doc-row"><span>Платформа</span><span class="doc-status">{{ deal.product }}</span></div>
+      <div class="doc-row"><span>Комплектация</span><span class="doc-status">«{{ deal.package }}»</span></div>
+      <div class="doc-row"><span>Позиций в поставке</span><span class="doc-status">{{ stats.positions }}</span></div>
+      <div class="doc-row"><span>Схема оплаты</span><span class="doc-status">{{ stats.paid_share }}/{{ stats.rest_share }}</span></div>
+      <div class="doc-row"><span>Стоимость комплекта</span><span class="doc-status">{{ deal.amount|money }}</span></div>
+      <div class="doc-row"><span>Срок поставки</span><span class="doc-status">{{ deal.delivery.eta_label }}</span></div>
+    </div>
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Ответственный</h4>
+      <div style="font-size:13.5px;font-weight:600;">{{ deal.specialist_name }}</div>
+      <div class="muted">{{ deal.specialist_role }} · {{ deal.specialist_phone }}</div>
+      <a href="/cabinet/specialist" class="link-accent" style="margin-top:12px;">Написать специалисту →</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

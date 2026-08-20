@@ -1,0 +1,101 @@
+{% extends 'public_base.html' %}
+{% block title %}{{ part.name }} — запчасти АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap" style="padding-bottom:50px;">
+  <div class="crumbs" style="margin:22px 0 18px;">
+    <a href="/">Главная</a><span class="sep">›</span>
+    <a href="/parts">Запчасти</a><span class="sep">›</span>
+    <a href="/parts?group={{ part.group|urlencode }}">{{ part.group }}</a><span class="sep">›</span>
+    <b>{{ part.article }}</b>
+  </div>
+
+  <div class="part-hero">
+    <div>
+      <div class="eyebrow">{{ part.group }} · {{ part.kind }}</div>
+      <h1 style="font-size:26px;font-weight:600;margin-top:12px;">{{ part.name }}</h1>
+      <div style="display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap;">
+        <span class="mono" style="color:var(--text-dim);font-size:12px;">Арт.: {{ part.article }}</span>
+        <span class="status-chip {{ 'ok' if part.in_stock else 'draft' }}">{{ part.stock }}</span>
+      </div>
+
+      <div class="cards two" style="margin-top:24px;">
+        <div class="card">
+          <h4>Совместимость</h4>
+          <div class="pc-models">
+            {% for m in part.model_list %}<span class="chip">AGRAS {{ m }}</span>{% else %}
+            <span class="muted">уточняется</span>{% endfor %}
+          </div>
+        </div>
+        <div class="card">
+          <h4>Классификация</h4>
+          <div class="doc-row"><span>Узел</span><span class="doc-status dim">{{ part.group }}</span></div>
+          <div class="doc-row"><span>Тип детали</span><span class="doc-status dim">{{ part.kind }}</span></div>
+        </div>
+      </div>
+
+      <section class="block">
+        <div class="block-head"><h2>Условия</h2></div>
+        <ul class="rule-list">
+          <li>Оригинальные комплектующие DJI Agras, отгрузка со склада в день оплаты.</li>
+          <li>Позиции «под заказ» привозим партией — срок подтверждает менеджер при согласовании.</li>
+          <li>Установку и диагностику выполняет сервис АЭРОХАБ; гарантия на работы — 14 дней.</li>
+          <li>Для сервисных обращений деталь подбирается по цифровому паспорту вашей техники.</li>
+        </ul>
+      </section>
+    </div>
+
+    <div>
+      <div class="card solo">
+        <h4>Цена</h4>
+        <div class="del-progress">{{ part.price|money if part.price else 'по запросу' }}</div>
+        <div class="muted" style="margin-top:6px;">за штуку, с учётом НДС</div>
+
+        {% if sent %}
+        <div class="form-ok" style="margin-top:14px;">Запрос отправлен — менеджер свяжется с вами
+          и подтвердит наличие и срок.</div>
+        {% endif %}
+
+        {% if user and user.role == 'client' %}
+        <form method="post" action="/parts/{{ part.id }}/request" style="margin-top:16px;">
+          <div class="f-row">
+            <label>Количество</label>
+            <input type="number" name="qty" value="1" min="1" max="999">
+          </div>
+          <div class="f-row">
+            <label>Комментарий</label>
+            <textarea name="comment" placeholder="Серийный номер техники, срочность, самовывоз."></textarea>
+          </div>
+          <button class="btn btn-primary btn-block">Запросить КП по запчасти</button>
+        </form>
+        {% elif user %}
+        <a href="/kp" class="btn btn-outline btn-block" style="margin-top:16px;">Запросить КП</a>
+        <div class="muted-sm" style="margin-top:8px;">Вы вошли как {{ user.role_title|lower }} —
+          заявка на запчасти оформляется из кабинета покупателя.</div>
+        {% else %}
+        <a href="/login?next=/parts/{{ part.id }}" class="btn btn-primary btn-block" style="margin-top:16px;">
+          Войти и запросить КП</a>
+        <a href="/register?portal=client" class="btn btn-ghost btn-block" style="margin-top:10px;">
+          Зарегистрироваться</a>
+        <div class="muted-sm" style="margin-top:8px;">Запрос сохранится в кабинете вместе
+          со счётом и статусом.</div>
+        {% endif %}
+      </div>
+
+      <div class="card solo" style="margin-top:22px;">
+        <h4>Из этого же узла</h4>
+        {% for s in similar %}
+        <div class="doc-row">
+          <a href="/parts/{{ s.id }}" style="max-width:70%;">{{ s.name[:60] }}{{ '…' if s.name|length > 60 }}</a>
+          <span class="doc-status dim">{{ s.price|money if s.price else '—' }}</span>
+        </div>
+        {% else %}
+        <p class="empty">Похожих позиций нет.</p>
+        {% endfor %}
+        <a href="/parts?group={{ part.group|urlencode }}" class="link-accent" style="margin-top:12px;">
+          Весь узел «{{ part.group }}» →</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'public_base.html' %}
+{% block title %}Контакты — АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap">
+  <div class="roi-top">
+    <div>
+      <div class="eyebrow">Контакты</div>
+      <h1>АЭРОХАБ · {{ company.city }}</h1>
+    </div>
+    <div class="roi-desc">
+      Продажа и поставка агродронов DJI Agras, сервис и гарантия, обучение операторов,
+      сопровождение постановки на учёт. Работаем с хозяйствами и поставщиками по всей России.
+    </div>
+    <div class="roi-actions">
+      <a href="/kp" class="btn btn-primary">Получить КП</a>
+      <a href="/login" class="btn btn-ghost">Войти в кабинет</a>
+    </div>
+  </div>
+
+  <div class="cards" style="margin-top:32px;margin-bottom:50px;">
+    <div class="card">
+      <h4>Связь</h4>
+      <div class="doc-row"><span>Телефон</span><span class="doc-status">{{ company.phone }}</span></div>
+      <div class="doc-row"><span>Почта</span><span class="doc-status">{{ company.email }}</span></div>
+      <div class="doc-row"><span>Город</span><span class="doc-status">{{ company.city }}</span></div>
+    </div>
+    <div class="card">
+      <h4>Продажи</h4>
+      <p class="muted-sm">Первый контакт по заявке — в течение 30 минут в рабочее время.
+         КП после квалификации — в течение часа.</p>
+      <a href="/kp" class="link-accent" style="margin-top:12px;">Оставить заявку →</a>
+    </div>
+    <div class="card">
+      <h4>Сервис</h4>
+      <p class="muted-sm">Приёмка техники с актом и фотофиксацией, диагностика в течение рабочего дня,
+         независимый контроль качества ремонта.</p>
+      <a href="/login?portal=client" class="link-accent" style="margin-top:12px;">Кабинет клиента →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

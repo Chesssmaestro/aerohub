@@ -1,0 +1,36 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Учёт и ЭПР</h1>
+  <p>Постановка беспилотника на учёт и сопровождение экспериментального правового режима.
+     Раздел не является юридической консультацией — профильные вопросы ведёт специалист.</p>
+</div>
+
+<div class="cards two" style="margin-top:20px;">
+  {% for a in deal.accounting %}
+  <div class="card">
+    <h4>{{ a.title }}</h4>
+    <div class="doc-row"><span>Статус</span><span class="doc-status">{{ a.status }}</span></div>
+    <div class="doc-row"><span>Дата</span><span class="doc-status dim">{{ a.date_label }}</span></div>
+    <p class="muted-sm" style="margin-top:10px;">{{ a.note }}</p>
+  </div>
+  {% endfor %}
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Порядок действий</h2><span class="block-note">сопровождает специалист АЭРОХАБ</span></div>
+  <div class="two-col">
+    <ul class="rule-list">
+      <li>Учёт беспилотного воздушного судна — обязанность эксплуатанта, порог по массе уточняется отдельно.</li>
+      <li>Документы на постановку готовятся вместе с передачей техники и цифровым паспортом.</li>
+      <li>Заявка на сопровождение ЭПР подаётся после подписания договора.</li>
+    </ul>
+    <ul class="rule-list">
+      <li>План полёта подаётся до начала работ, региональные ограничения проверяются перед каждой сменой.</li>
+      <li>Любой сотрудник и оператор вправе остановить полёт при угрозе безопасности.</li>
+      <li>Изменения в составе техники или операторов передаются специалисту.</li>
+    </ul>
+  </div>
+</section>
+{% endblock %}

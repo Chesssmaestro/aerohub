@@ -1,0 +1,98 @@
+{% extends 'public_base.html' %}
+{% block title %}Получить КП — АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap">
+  <div class="roi-top">
+    <div>
+      <div class="eyebrow">Заявка</div>
+      <h1>Получить коммерческое предложение</h1>
+    </div>
+    <div class="roi-desc">
+      Опишите хозяйство — площадь, культуры и задачи. Менеджер продаж возьмёт заявку в работу
+      и подготовит КП с комплектацией, ценой, сроком поставки и условиями оплаты.
+      Норматив первого контакта — 30 минут в рабочее время.
+    </div>
+    <div class="roi-actions">
+      <a href="/roi" class="btn btn-ghost">Посчитать окупаемость</a>
+      <a href="/configurator" class="btn btn-ghost">Собрать комплектацию</a>
+    </div>
+  </div>
+
+  <div class="col-2-1" style="margin-top:32px;padding-bottom:40px;">
+    <div class="card solo">
+      {% if not user %}
+        <h4>Сначала вход в аккаунт</h4>
+        <p class="muted-sm" style="margin-top:10px;">
+          Заявка оформляется из личного кабинета: там она получает номер, туда менеджер
+          прикладывает счёт и документы, там же виден статус — от согласования до поставки.
+        </p>
+        <a href="/login?next=/kp" class="btn btn-primary btn-block" style="margin-top:18px;">Войти</a>
+        <a href="/register?portal=client" class="btn btn-ghost btn-block" style="margin-top:10px;">
+          Зарегистрироваться как покупатель</a>
+        <p class="demo-note">Регистрация занимает минуту: организация, контакты и пароль.</p>
+      {% elif sent %}
+        <div class="form-ok">Заявка принята. Мы свяжемся с вами по указанным контактам.</div>
+        <p class="muted-sm">Заявка зарегистрирована и видна руководителю и менеджеру продаж
+           в кабинете сотрудника — в разделе «Входящие заявки».</p>
+        <a href="/" class="btn btn-outline" style="margin-top:16px;">На главную</a>
+      {% else %}
+        {% set f = form or {} %}
+        {% if error %}<div class="form-error">{{ error }}</div>{% endif %}
+        <form method="post" action="/kp">
+          <div class="f-two">
+            <div class="f-row">
+              <label>Имя</label>
+              <input type="text" name="name" value="{{ f.name or (user.full_name if user else '') }}" required>
+            </div>
+            <div class="f-row">
+              <label>Телефон</label>
+              <input type="tel" name="phone" value="{{ f.phone or (user.phone if user else '') }}"
+                     placeholder="+7 999 000-00-00">
+            </div>
+          </div>
+          <div class="f-two">
+            <div class="f-row">
+              <label>Почта</label>
+              <input type="email" name="email" value="{{ f.email or (user.email if user else '') }}">
+            </div>
+            <div class="f-row">
+              <label>Хозяйство</label>
+              <input type="text" name="farm" value="{{ f.farm or (user.company.name if user and user.company else '') }}"
+                     placeholder="ООО «Агроком»">
+            </div>
+          </div>
+          <div class="f-row">
+            <label>Площадь обработки, га</label>
+            <input type="text" name="area" value="{{ f.area or '' }}" placeholder="12 000">
+          </div>
+          <div class="f-row">
+            <label>Задача</label>
+            <textarea name="comment" placeholder="Культуры, число обработок, сроки, интересующая модель.">{{ f.comment or preset or '' }}</textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Отправить заявку</button>
+          <p class="demo-note">Отправляя заявку, вы соглашаетесь на обработку контактных данных
+             для подготовки коммерческого предложения.</p>
+        </form>
+      {% endif %}
+    </div>
+
+    <div>
+      <div class="card solo">
+        <h4>Что будет дальше</h4>
+        <div class="task-list">
+          <div class="task-item"><div class="task-date">30 мин</div><div class="task-body"><b>Первый контакт</b><span>Менеджер уточняет площадь, культуры и сроки.</span></div></div>
+          <div class="task-item"><div class="task-date">1 час</div><div class="task-body"><b>КП после квалификации</b><span>Состав комплекта, цена, срок поставки, условия оплаты.</span></div></div>
+          <div class="task-item"><div class="task-date">далее</div><div class="task-body"><b>Договор и счёт</b><span>Схема оплаты 30/70, поставка и обучение операторов.</span></div></div>
+        </div>
+      </div>
+      <div class="card solo" style="margin-top:22px;">
+        <h4>Контакты</h4>
+        <div class="doc-row"><span>Телефон</span><span class="doc-status">{{ company.phone }}</span></div>
+        <div class="doc-row"><span>Почта</span><span class="doc-status">{{ company.email }}</span></div>
+        <div class="doc-row"><span>Город</span><span class="doc-status">{{ company.city }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<nav class="pubnav">
+  <a href="/" class="brand">
+    {% include 'partials/logo.html' %}
+    <span style="display:flex;flex-direction:column;line-height:1.15;">
+      <b>АЭРОХАБ</b>
+      <span>Agriculture</span>
+    </span>
+  </a>
+  <button class="nav-burger" id="nav-toggle" type="button" aria-label="Меню" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="pubnav-menu" id="pub-menu">
+    <li><a href="/#spraying" class="{{ 'active' if active == 'spraying' }}">Обработка полей</a></li>
+    <li><a href="/#cargo" class="{{ 'active' if active == 'cargo' }}">Транспортировка</a></li>
+    <li><a href="/parts" class="{{ 'active' if active == 'parts' }}">Запчасти</a></li>
+    <li><a href="/configurator" class="{{ 'active' if active == 'configurator' }}">Конфигуратор</a></li>
+    <li><a href="/roi" class="{{ 'active' if active == 'roi' }}">ROI-калькулятор</a></li>
+    <li><a href="/#platform" class="{{ 'active' if active == 'platform' }}">Платформа</a></li>
+    <li><a href="/kp" class="{{ 'active' if active == 'kp' }}">Получить КП</a></li>
+    <li class="only-mobile">
+      <a href="{{ user.home_url if user else '/login' }}">Личный кабинет</a>
+    </li>
+    <li class="only-mobile"><a href="/contacts">Контакты</a></li>
+  </ul>
+  <div class="pubnav-right">
+    {% if user %}
+      <a href="{{ user.home_url }}" class="btn btn-outline btn-sm">Личный кабинет</a>
+    {% else %}
+      <a href="/login" class="btn btn-outline btn-sm">Личный кабинет</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<footer class="site-footer">
+  <div class="pub-wrap">
+    <div class="cols">
+      <div>
+        <a href="/" class="brand" style="margin-bottom:14px;">
+          {% include 'partials/logo.html' %}
+          <b>АЭРОХАБ</b>
+        </a>
+        <p>Поставка, сервис и сопровождение агродронов DJI Agras.<br>
+           Единый кабинет сделки, поставки, обучения и эксплуатации.</p>
+      </div>
+      <div>
+        <h4>Разделы</h4>
+        <p><a href="/configurator">Конфигуратор комплектаций</a><br>
+           <a href="/roi">ROI-калькулятор</a><br>
+           <a href="/kp">Получить КП</a><br>
+           <a href="/contacts">Контакты</a></p>
+      </div>
+      <div>
+        <h4>Контакты</h4>
+        <p>{{ company.city }}<br>
+           <a href="tel:{{ company.phone }}">{{ company.phone }}</a><br>
+           <a href="mailto:{{ company.email }}">{{ company.email }}</a></p>
+      </div>
+    </div>
+    <div class="fine">© 2026 {{ company.name }} · портал сделки, поставки и эксплуатации</div>
+  </div>
+</footer>
+{% endblock %}
