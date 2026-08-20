@@ -1,0 +1,16 @@
+{% set done = deal.operations | rejectattr('planned') | list %}
+{% if done %}
+{% set areas = done | map(attribute='area') | list %}
+{% set maxa = areas | max %}
+<svg viewBox="0 0 260 60" width="100%" height="60" style="margin-top:12px;" role="img"
+     aria-label="История обработок по датам">
+  {% for o in done %}
+  {% set h = (o.area / maxa * 44) | round(1) %}
+  <rect x="{{ loop.index0 * (260 / done|length) + 3 }}" y="{{ 50 - h }}"
+        width="{{ (260 / done|length) - 8 }}" height="{{ h }}"
+        fill="{{ '#FF6A1A' if loop.last else '#60A5FA' }}" opacity="{{ 0.55 + loop.index0 * 0.07 }}"/>
+  <text x="{{ loop.index0 * (260 / done|length) + (260 / done|length - 8) / 2 + 3 }}" y="59"
+        text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7" fill="#5B6270">{{ o.date_label }}</text>
+  {% endfor %}
+</svg>
+{% endif %}

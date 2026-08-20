@@ -1,0 +1,50 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Оплата · схема {{ stats.paid_share }}/{{ stats.rest_share }}</h1>
+  <p>Отгрузка техники разблокируется после подтверждения 100% оплаты по данным 1С.</p>
+</div>
+
+<div class="col-2-1">
+  <div class="card solo">
+    <h4>График платежей</h4>
+    <div class="pay-bar"><i style="width:{{ stats.paid_share }}%"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+      <span>{{ stats.paid_share }}% оплачено</span><span>{{ stats.rest_share }}% ожидает</span>
+    </div>
+    {% for p in deal.payments %}
+    <div class="doc-row">
+      <div class="dr-main">
+        <span class="log-dot {{ '' if p.paid else 'accent' }}">{{ '✓' if p.paid else '•' }}</span>
+        <span>{{ p.share }}% — {{ p.amount|money }}</span>
+      </div>
+      <span class="doc-status {{ '' if p.paid else 'warn' }}">{{ p.status }} · {{ p.due_label }}</span>
+    </div>
+    {% endfor %}
+    <div class="doc-row" style="border-top:1px solid var(--line-bright);margin-top:8px;">
+      <span>Итого по договору</span>
+      <span class="doc-status">{{ deal.amount|money }}</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="card solo">
+      <h4>Счёт</h4>
+      {% for d in deal.documents if 'Счёт' in d.title %}
+      <div class="doc-row"><span>{{ d.title }}</span><span class="doc-status {{ d.status_tone }}">{{ d.status }}</span></div>
+      <div class="muted-sm">{{ d.date_label }} · {{ d.kind }} · {{ d.size_label }}</div>
+      {% endfor %}
+      <a href="/cabinet/docs" class="link-accent" style="margin-top:12px;">Открыть документы →</a>
+    </div>
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Что блокирует отгрузку</h4>
+      <ul class="rule-list">
+        <li>Оплата менее 100% — CRM не переводит сделку в отгрузку (SAL-260).</li>
+        <li>Финансовый статус меняется только по данным 1С, вручную — нельзя.</li>
+        <li>Отгрузка без положительного чек-листа предпродажной подготовки запрещена.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

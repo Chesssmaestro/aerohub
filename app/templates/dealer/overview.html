@@ -1,0 +1,60 @@
+{% extends 'dealer/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Дилерский контур АЭРОХАБ</h1>
+  <p>Оптовые заявки, ваши клиенты и партнёрский уровень. Правила предоплаты и блокировки отгрузки
+     действуют так же, как для конечного клиента.</p>
+</div>
+
+<div class="cards" style="margin-top:20px;">
+  <div class="card">
+    <h4>Ваш уровень</h4>
+    <div class="del-progress">{{ level }}</div>
+    <div class="muted" style="margin-top:6px;">След. порог — Gold от 3 ед. в квартал</div>
+    <a href="/dealer/pricing" class="link-accent" style="margin-top:12px;">Матрица уровней →</a>
+  </div>
+  <div class="card">
+    <h4>Оптовые заявки</h4>
+    {% for o in orders[:3] %}
+    <div class="doc-row"><span>{{ o.model }} × {{ o.qty }}</span>
+      <span class="doc-status {{ 'warn' if 'оплат' in o.status else '' }}">{{ o.status }}</span></div>
+    {% else %}
+    <p class="empty">Заявок пока нет.</p>
+    {% endfor %}
+    <a href="/dealer/orders" class="link-accent" style="margin-top:12px;">Все заявки →</a>
+  </div>
+  <div class="card">
+    <h4>Ваши клиенты</h4>
+    {% for l in leads[:3] %}
+    <div class="doc-row"><span>{{ l.name }}</span><span class="doc-status dim">{{ l.stage }}</span></div>
+    {% else %}
+    <p class="empty">Клиентов пока нет.</p>
+    {% endfor %}
+    <a href="/dealer/clients" class="link-accent" style="margin-top:12px;">Все клиенты →</a>
+  </div>
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Правила контура</h2><span class="block-note">общие с продажами АЭРОХАБ</span></div>
+  <div class="two-col">
+    <ul class="rule-list">
+      <li>Правило 100% предоплаты действует и для дилерских заявок.</li>
+      <li>Отгрузка блокируется в 1С до подтверждения оплаты (SAL-260).</li>
+      <li>Скидки — только в пределах утверждённой матрицы полномочий.</li>
+    </ul>
+    <ul class="rule-list">
+      <li>Резерв склада фиксируется по конкретной заявке и серийным номерам.</li>
+      <li>Обучение дилерских специалистов согласуется с начальником АУЦ (DEL-460).</li>
+      <li>Карточка клиента принадлежит компании, а не менеджеру.</li>
+    </ul>
+  </div>
+</section>
+
+<div class="oq-box draft">
+  <h3>◆ Статус черновика</h3>
+  <p>Открытый вопрос ADR-EPA-101: ведутся ли дилерские сделки в общем Bitrix24 отдельным
+     подразделением или во внешнем контуре без доступа к внутренней CRM АЭРОХАБ.
+     Пороги уровней и размер скидки не утверждены.</p>
+</div>
+{% endblock %}

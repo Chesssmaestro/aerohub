@@ -1,0 +1,35 @@
+{% set p = delivery.progress %}
+<svg class="route-map" viewBox="0 0 720 240" role="img"
+     aria-label="Маршрут поставки {{ delivery.origin }} — {{ delivery.destination }}">
+  <!-- условный контур территории -->
+  <path d="M40 150 L90 96 L150 78 L210 92 L268 70 L330 84 L392 62 L450 78 L512 66 L576 88 L640 74 L690 108
+           L672 156 L604 178 L536 164 L470 186 L400 172 L330 190 L262 174 L196 190 L128 176 L70 186 Z"
+        fill="#1A1D22" stroke="#23262D" stroke-width="1"/>
+  <g stroke="#23262D" stroke-width="1" opacity="0.8">
+    <path d="M160 80 L150 186"/><path d="M300 76 L292 182"/><path d="M440 72 L448 180"/><path d="M580 82 L570 172"/>
+  </g>
+
+  <!-- маршрут: справа (отправление) налево (прибытие) -->
+  <path id="route-line" d="M628 122 C520 60, 400 190, 300 118 S150 96, 96 130"
+        fill="none" stroke="#60A5FA" stroke-width="2" stroke-dasharray="6 5" opacity="0.85"/>
+
+  <!-- точка отправления -->
+  <circle cx="628" cy="122" r="7" fill="#0A0B0D" stroke="#60A5FA" stroke-width="2"/>
+  <text x="628" y="148" text-anchor="middle" font-size="12" fill="#F2F3F5"
+        font-family="Inter, sans-serif">{{ delivery.origin }}</text>
+
+  <!-- точка прибытия -->
+  <circle cx="96" cy="130" r="7" fill="#0A0B0D" stroke="#F2F3F5" stroke-width="2"/>
+  <text x="96" y="112" text-anchor="middle" font-size="12" fill="#F2F3F5"
+        font-family="Inter, sans-serif">{{ delivery.destination }}</text>
+
+  <!-- текущее положение груза -->
+  <g transform="translate({{ 628 - (628 - 96) * p / 100 }}, {{ 122 + (130 - 122) * p / 100 }})">
+    <circle r="13" fill="#60A5FA" opacity="0.18"/>
+    <circle r="9" fill="#60A5FA"/>
+    <path d="M-4 -2 h5 v4 h-5z M1 -1 h3 l2 3 h-5z M-3 3.5 a1 1 0 002 0 M3 3.5 a1 1 0 002 0"
+          fill="#0A0B0D" stroke="#0A0B0D" stroke-width="0.6"/>
+    <text y="-18" text-anchor="middle" font-size="11" fill="#60A5FA"
+          font-family="JetBrains Mono, monospace">{{ delivery.current_point }}</text>
+  </g>
+</svg>

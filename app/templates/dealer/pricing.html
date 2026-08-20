@@ -1,0 +1,41 @@
+{% extends 'dealer/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Цены и дилерская матрица</h1>
+  <p>Черновой пример структуры для обсуждения: пороги и размер скидки не утверждены.</p>
+</div>
+
+<div class="table-wrap">
+  <table class="proc-table">
+    <thead><tr><th>Уровень</th><th>Объём</th><th>Скидка</th><th>Статус</th></tr></thead>
+    <tbody>
+      {% for lv in levels %}
+      <tr>
+        <td class="proc-code">{{ lv.name }}</td>
+        <td class="proc-name">{{ lv.volume }}</td>
+        <td class="proc-kpi">{{ lv.discount }}</td>
+        <td><span class="doc-status {{ 'ok' if lv.name == level else 'dim' }}">
+          {{ 'Ваш уровень' if lv.name == level else 'Доступен' }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Что влияет на цену</h2></div>
+  <ul class="rule-list">
+    <li>Объём выборки за квартал по подтверждённым и оплаченным заявкам.</li>
+    <li>Комплектация: пакет, дополнительное оснащение и обучение операторов.</li>
+    <li>Логистика до склада дилера и условия хранения резерва.</li>
+    <li>Скидка вне матрицы согласуется руководителем продаж персонально.</li>
+  </ul>
+</section>
+
+<div class="oq-box">
+  <h3>⚠ Открытые вопросы</h3>
+  <p>Не утверждён прайс-лист и матрица скидок. До утверждения цены подтверждаются менеджером
+     продаж по каждой заявке отдельно.</p>
+</div>
+{% endblock %}

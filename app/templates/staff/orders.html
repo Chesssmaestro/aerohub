@@ -1,0 +1,48 @@
+{% extends 'staff/_base.html' %}
+
+{% block section %}
+{% set stages = stage_of.values() | list %}
+
+<div class="page-head">
+  <h1>Заказы клиентов</h1>
+  <p>Заказы, оформленные покупателями в кабинете, попадают сюда автоматически.
+     Откройте карточку, чтобы приложить счёт, проверить чек и перевести заказ дальше.</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card"><div class="kl">Заказов всего</div><div class="kv">{{ deals|length }}</div></div>
+  <div class="kpi-card"><div class="kl">Ждут нашего действия</div>
+    <div class="kv">{{ stages | selectattr('actor', 'equalto', 'staff') | list | length }}</div></div>
+  <div class="kpi-card"><div class="kl">Сумма заказов</div>
+    <div class="kv">{{ (deals|sum(attribute='amount'))|mln }}</div></div>
+  <div class="kpi-card"><div class="kl">Файлов приложено</div>
+    <div class="kv">{{ deals|map(attribute='files')|map('length')|sum }}</div></div>
+</div>
+
+<section class="block">
+  <div class="block-head"><h2>Все заказы</h2><span class="block-note">новые — сверху</span></div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Заказ</th><th>Клиент</th><th>Комплект</th><th>Сумма</th><th>Этап</th><th>Действие</th><th>Файлы</th><th></th></tr></thead>
+      <tbody>
+        {% for d in deals %}
+        {% set st = stage_of[d.id] %}
+        <tr>
+          <td class="proc-code">№{{ d.number }}<br><span class="muted">{{ d.created_at|ru_date }}</span></td>
+          <td class="proc-name">{{ d.company.name if d.company else '—' }}
+            {% if d.created_by %}<br><span class="muted">{{ d.created_by.full_name }}</span>{% endif %}</td>
+          <td class="proc-kpi">{{ d.product }}<br><span class="muted">«{{ d.package }}»</span></td>
+          <td class="proc-kpi">{{ d.amount|money }}</td>
+          <td><span class="doc-status {{ 'warn' if st.actor == 'staff' else ('ok' if st.key == 'done' else 'blue') }}">{{ st.title }}</span></td>
+          <td class="proc-kpi">{{ st.staff }}</td>
+          <td class="proc-kpi">{{ d.files|length }}</td>
+          <td><a class="btn btn-outline btn-sm" href="/staff/orders/{{ d.id }}">Открыть</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="empty">Заказов пока нет.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

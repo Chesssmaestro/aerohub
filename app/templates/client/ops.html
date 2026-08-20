@@ -1,0 +1,111 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set done = deal.operations | rejectattr('planned') | list %}
+{% set planned = deal.operations | selectattr('planned') | list %}
+{% set last = done | last %}
+
+<div class="page-head">
+  <div class="head-row">
+    <h1>Обработки</h1>
+    <span class="status-chip ok">Сезон {{ stats.season }}</span>
+  </div>
+  <p>История выполненных операций, ближайшие задания и состояние техники.
+     Данные поступают из полётных заданий и подтверждаются отчётом по смене.</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kl"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20c5-2 8-6 8-11-4 0-8 3-8 11z" stroke="currentColor" stroke-width="1.5"/><path d="M12 20c-4-1-7-4-7-8 3 0 7 2 7 8z" stroke="currentColor" stroke-width="1.5"/></svg>Обработано за сезон</div>
+    <div class="kv">{{ stats.area_total|number }} <small>га</small></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kl"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" stroke="currentColor" stroke-width="1.5"/><path d="M8 12l3 3 5-6" stroke="currentColor" stroke-width="1.5"/></svg>Операций выполнено</div>
+    <div class="kv">{{ stats.ops_done }}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kl"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M12 12l4-3" stroke="currentColor" stroke-width="1.5"/></svg>Средняя производительность</div>
+    <div class="kv">{{ stats.avg_per_day }} <small>га / день</small></div>
+  </div>
+  <div class="kpi-card">
+    <div class="kl"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="15" stroke="currentColor" stroke-width="1.5"/><path d="M4 10h16M9 3v4M15 3v4" stroke="currentColor" stroke-width="1.5"/></svg>Активный сезон</div>
+    <div class="kv">{{ stats.season }}</div>
+  </div>
+</div>
+
+<div class="col-2-1" style="margin-top:26px;">
+  <section class="block" style="margin-top:0;">
+    <div class="block-head">
+      <h2>История обработок</h2>
+      <span class="block-note">выполнено {{ done|length }} из {{ deal.operations|length }} операций</span>
+    </div>
+    <div class="table-wrap">
+      <table class="proc-table">
+        <thead><tr><th>Дата</th><th>Поле</th><th>Культура</th><th>Сценарий</th><th>Объём</th><th>Статус</th></tr></thead>
+        <tbody>
+          {% for o in done %}
+          <tr>
+            <td class="proc-code">{{ o.date_label }}</td>
+            <td class="proc-name">{{ o.field }}</td>
+            <td class="proc-kpi">{{ o.crop }}</td>
+            <td class="proc-kpi">{{ o.scenario }}</td>
+            <td class="proc-kpi">{{ o.area|number }} {{ o.unit }}</td>
+            <td><span class="doc-status {{ 'blue' if o.status == 'Выполнено' }}">● {{ o.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'partials/ops_spark.html' %}
+  </section>
+
+  <div>
+    <div class="map-box">
+      <div class="rh-label" style="margin-bottom:10px;">Карта активов и полей</div>
+      {% include 'partials/fields_map.html' %}
+    </div>
+    {% if last %}
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Последняя операция</h4>
+      <div style="font-family:'Unbounded';font-size:16px;">{{ last.field }}</div>
+      <div class="muted" style="margin-top:4px;">{{ last.crop }} · {{ last.area|number }} {{ last.unit }}</div>
+      <div class="doc-row" style="margin-top:10px;"><span>Дата</span><span class="doc-status dim">{{ last.date_label }}.2026</span></div>
+      <div class="doc-row"><span>Статус</span><span class="doc-status blue">{{ last.status }}</span></div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="two-col" style="margin-top:28px;">
+  <section class="block" style="margin-top:0;">
+    <div class="block-head"><h2>Ближайшие задания</h2></div>
+    <div class="task-list">
+      {% for o in planned %}
+      <div class="task-item">
+        <div class="task-date">{{ o.date_label }}</div>
+        <div class="task-body"><b>{{ o.field }} · {{ o.scenario }}</b>
+          <span>{{ o.crop }} · {{ o.area|number }} {{ o.unit }}</span></div>
+      </div>
+      {% else %}
+      <p class="empty">Заданий в плане нет.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="block" style="margin-top:0;">
+    <div class="block-head"><h2>Состояние техники</h2>
+      <span class="block-note">{{ deal.product }} — в работе</span></div>
+    <div class="card solo">
+      <div style="margin-bottom:14px;">{% with drone = deal.product %}{% include 'partials/drone.html' %}{% endwith %}</div>
+      <div class="machine-state">
+        <div class="ms-row"><span>Наработка сезона</span><b>126 ч</b></div>
+        <div class="ms-row"><span>Аккумуляторы</span><b style="color:var(--ok);">4 / 4 в норме</b></div>
+        <div class="ms-row"><span>Следующее ТО</span><b style="color:var(--warn);">через 18 ч</b></div>
+        <div class="ms-row"><span>Связь RTK</span><b>стабильна</b></div>
+        <div class="ms-row"><span>GNSS</span><b>активно</b></div>
+      </div>
+      <a href="/cabinet/service" class="btn btn-outline btn-block" style="margin-top:16px;">Открыть сервисный журнал</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

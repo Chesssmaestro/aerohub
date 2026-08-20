@@ -1,0 +1,63 @@
+{% extends 'cabinet_base.html' %}
+{% block title %}{{ crumb }} — кабинет сотрудника АЭРОХАБ{% endblock %}
+
+{% set shell_class = 'wide-side' %}
+
+{% block sidebar %}
+{% if can_view_requests or can_view_orders or can_keep_warehouse %}
+<div class="side-label">Работа</div>
+<ul class="role-list">
+  <li>
+    <a href="/staff" class="role-item {{ 'active' if active == 'role' }}">
+      <span class="ri-dot"></span>Моя роль
+    </a>
+  </li>
+  {% if can_view_orders %}
+  <li>
+    <a href="/staff/orders" class="role-item {{ 'active' if active == 'orders' }}">
+      <span class="ri-dot"></span>Заказы клиентов
+    </a>
+  </li>
+  {% endif %}
+  {% if can_view_requests %}
+  <li>
+    <a href="/staff/requests" class="role-item {{ 'active' if active == 'requests' }}">
+      <span class="ri-dot"></span>Входящие заявки
+    </a>
+  </li>
+  {% endif %}
+  {% if can_keep_warehouse %}
+  <li>
+    <a href="/staff/parts" class="role-item {{ 'active' if active == 'parts' }}">
+      <span class="ri-dot"></span>Склад запчастей
+    </a>
+  </li>
+  {% endif %}
+</ul>
+{% endif %}
+
+{% for title, items in groups %}
+<div class="side-label">{{ title }}</div>
+<ul class="role-list">
+  {% for r in items %}
+  <li>
+    {% if can_view_all or (role and r.key == role.key) or r.key == user.staff_role %}
+      <a href="/staff/role/{{ r.key }}"
+         class="role-item {{ 'active' if role and r.key == role.key and active == 'role' }}">
+        <span class="ri-dot"></span>{{ r.name }}
+      </a>
+    {% else %}
+      <span class="role-item" style="opacity:.45;cursor:default;" title="Доступна только своя карточка роли">
+        <span class="ri-dot"></span>{{ r.name }}
+      </span>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endfor %}
+{% endblock %}
+
+{% block main %}
+{% include 'partials/org_head.html' %}
+{% block section %}{% endblock %}
+{% endblock %}

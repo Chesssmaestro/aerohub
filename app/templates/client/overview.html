@@ -1,0 +1,145 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set stage = deal.stages | selectattr('status', 'equalto', 'current') | first %}
+{% set training = deal.training %}
+{% set delivery = deal.delivery %}
+
+<div class="col-2-1">
+  <div>
+    <div class="unit-hero">
+      <div>
+        <div class="uh-eyebrow">Личный кабинет · обзор</div>
+        <h1>Сделка, поставка<br>и эксплуатация —<br>в одном кабинете</h1>
+        <p>Все этапы после заявки собраны в одной рабочей среде — от комплектации и договора
+           до обучения, эксплуатации и сервиса.</p>
+        <div class="uh-status">Статус сделки — <b>{{ stage.title if stage else 'закрыта' }}</b></div>
+      </div>
+      <div>{% with drone = deal.product %}{% include 'partials/drone.html' %}{% endwith %}</div>
+    </div>
+
+    <div class="status-stepper">
+      {% for s in deal.stages %}
+      <div class="step {{ s.status }}">
+        <div class="sn">0{{ loop.index }}</div>
+        <div class="st">{{ s.title }}</div>
+        <div class="sd">{{ s.date_label }}</div>
+        <div class="sm">{{ s.note }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card solo">
+    <h4>Следующий шаг</h4>
+    {% if training and not training.confirmed %}
+      <div class="big-num" style="font-size:19px;line-height:1.3;">Подтвердите<br>дату обучения</div>
+      <div class="muted" style="margin-top:10px;">{{ training.date_label }} · {{ training.participants }} участника</div>
+      <form action="/cabinet/training/confirm" method="post" style="margin-top:16px;">
+        <button class="btn btn-primary btn-block">Подтвердить дату обучения</button>
+      </form>
+    {% else %}
+      <div class="big-num" style="font-size:19px;line-height:1.3;">Ожидается<br>второй платёж</div>
+      <div class="muted" style="margin-top:10px;">{{ stats.rest_share }}% · {{ stats.rest|money }}</div>
+      <a href="/cabinet/payment" class="btn btn-outline btn-block" style="margin-top:16px;">Детали оплаты</a>
+    {% endif %}
+    <div class="muted-sm" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px;">
+      Комплект {{ deal.product }} «{{ deal.package }}» · {{ stats.positions }} позиций<br>
+      Стоимость комплекта — {{ deal.amount|mln }}
+    </div>
+  </div>
+</div>
+
+<div class="cards four" style="margin-top:24px;">
+  <div class="card">
+    <h4>Выбранная комплектация</h4>
+    <div style="font-family:'Unbounded';font-size:15px;">{{ deal.product }}</div>
+    <div class="muted" style="margin-top:4px;">«{{ deal.package }}» · {{ stats.positions }} позиций</div>
+    <div style="margin-top:6px;">{% with drone = deal.product %}{% include 'partials/drone.html' %}{% endwith %}</div>
+    <a href="/cabinet/config" class="link-accent">Смотреть спецификацию →</a>
+  </div>
+
+  <div class="card">
+    <h4>Документы</h4>
+    {% for d in deal.documents %}
+    <div class="doc-row">
+      <span>{{ d.title }}</span>
+      <span class="doc-status {{ d.status_tone }}">{{ d.status }}</span>
+    </div>
+    {% endfor %}
+    <a href="/cabinet/docs" class="link-accent" style="margin-top:12px;">Все документы →</a>
+  </div>
+
+  <div class="card">
+    <h4>График оплаты · схема {{ stats.paid_share }}/{{ stats.rest_share }}</h4>
+    <div class="pay-bar"><i style="width:{{ stats.paid_share }}%"></i></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);">
+      <span>{{ stats.paid_share }}%</span><span>{{ stats.rest_share }}%</span>
+    </div>
+    {% for p in deal.payments %}
+    <div class="doc-row">
+      <span>{{ p.share }}% · {{ p.amount|money }}</span>
+      <span class="doc-status {{ '' if p.paid else 'warn' }}">{{ p.status }}{% if not p.paid %} · {{ p.due_label }}{% endif %}</span>
+    </div>
+    {% endfor %}
+    <a href="/cabinet/payment" class="link-accent" style="margin-top:12px;">Детали платежей →</a>
+  </div>
+
+  <div class="card">
+    <h4>Поставка <span class="status-chip accent">{{ delivery.status }}</span></h4>
+    <div class="del-progress">{{ delivery.progress }}%</div>
+    <div class="muted" style="margin-top:6px;">{{ delivery.origin }} → {{ delivery.destination }}</div>
+    <div class="pay-bar" style="margin-top:12px;"><i style="width:{{ delivery.progress }}%"></i></div>
+    <div class="doc-row"><span>Текущая позиция</span><span class="doc-status blue">{{ delivery.current_point }}</span></div>
+    <div class="doc-row"><span>Прибытие</span><span class="doc-status">{{ delivery.eta_label }}</span></div>
+    <a href="/cabinet/delivery" class="link-accent" style="margin-top:12px;">Отследить поставку →</a>
+  </div>
+</div>
+
+<div class="cards four" style="margin-top:1px;">
+  <div class="card">
+    <h4>Учёт и ЭПР</h4>
+    {% for a in deal.accounting %}
+    <div class="doc-row">
+      <span>{{ a.title }}</span>
+      <span class="doc-status">{{ a.status }}</span>
+    </div>
+    <div class="muted-sm">{{ a.date_label }} · {{ a.note }}</div>
+    {% endfor %}
+    <a href="/cabinet/accounting" class="link-accent" style="margin-top:12px;">Подробнее →</a>
+  </div>
+
+  <div class="card">
+    <h4>Эксплуатация · сезон {{ stats.season }}</h4>
+    <div style="display:flex;gap:20px;">
+      <div><div class="big-num" style="font-size:20px;">{{ stats.ops_done }}</div><div class="muted">операций</div></div>
+      <div><div class="big-num" style="font-size:20px;">{{ stats.area_total|number }}</div><div class="muted">га</div></div>
+    </div>
+    {% include 'partials/ops_spark.html' %}
+    <a href="/cabinet/ops" class="link-accent" style="margin-top:10px;">Перейти к обработкам →</a>
+  </div>
+
+  <div class="card">
+    <h4>Сервис</h4>
+    {% for t in deal.tickets %}
+    <div class="doc-row"><span>Обращение №{{ t.number }}</span><span class="status-chip blue">{{ t.status }}</span></div>
+    <div class="doc-row"><span>{{ t.title }}</span><span class="doc-status">{{ t.date_label }}</span></div>
+    {% endfor %}
+    <a href="/cabinet/service" class="link-accent" style="margin-top:12px;">История обращений →</a>
+  </div>
+
+  <div class="card">
+    <h4>Специалист</h4>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="tb-avatar" style="width:40px;height:40px;font-size:14px;">{{ deal.specialist_name[:1] }}</div>
+      <div>
+        <b style="font-size:13.5px;">{{ deal.specialist_name }}</b>
+        <div class="muted">{{ deal.specialist_role }}</div>
+      </div>
+    </div>
+    <div class="doc-row" style="margin-top:10px;"><span>Телефон</span><span class="doc-status">{{ deal.specialist_phone }}</span></div>
+    <div class="doc-row"><span>Почта</span><span class="doc-status">{{ deal.specialist_email }}</span></div>
+    <a href="/cabinet/specialist" class="btn btn-primary btn-block btn-sm" style="margin-top:14px;">Написать специалисту</a>
+  </div>
+</div>
+{% endblock %}

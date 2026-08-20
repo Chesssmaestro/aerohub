@@ -1,0 +1,49 @@
+<svg viewBox="0 0 520 300" width="100%" height="auto" role="img" aria-label="Карта полей и выполненных обработок">
+  <defs>
+    <pattern id="fieldgrid" width="26" height="26" patternUnits="userSpaceOnUse">
+      <path d="M26 0H0V26" fill="none" stroke="#23262D" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <rect width="520" height="300" fill="#101317"/>
+  <rect width="520" height="300" fill="url(#fieldgrid)"/>
+
+  <!-- контуры полей -->
+  <g fill="#151A1E" stroke="#2A3138" stroke-width="1">
+    <path d="M40 40 L150 30 L168 92 L58 104 Z"/>
+    <path d="M190 26 L318 34 L308 96 L182 88 Z"/>
+    <path d="M348 44 L466 56 L452 122 L336 108 Z"/>
+    <path d="M52 128 L176 118 L192 190 L66 200 Z"/>
+    <path d="M212 116 L330 124 L322 196 L204 186 Z"/>
+    <path d="M356 140 L470 150 L458 214 L346 204 Z"/>
+    <path d="M96 218 L236 210 L248 274 L108 282 Z"/>
+    <path d="M276 214 L420 224 L408 282 L266 272 Z"/>
+  </g>
+
+  <!-- пройденные маршруты -->
+  <g stroke="#60A5FA" stroke-width="1.4" fill="none" opacity="0.75" stroke-dasharray="5 4">
+    <path d="M104 72 L245 62 L400 84 L118 160 L266 156 L404 178 L172 246 L338 248"/>
+  </g>
+
+  <!-- точки обработок -->
+  <g fill="#60A5FA">
+    <circle cx="104" cy="72" r="4"/><circle cx="245" cy="62" r="4"/><circle cx="400" cy="84" r="4"/>
+    <circle cx="118" cy="160" r="4"/><circle cx="266" cy="156" r="4"/><circle cx="404" cy="178" r="4"/>
+    <circle cx="172" cy="246" r="4"/>
+  </g>
+  <circle cx="338" cy="248" r="9" fill="#60A5FA" opacity="0.25"/>
+  <circle cx="338" cy="248" r="5" fill="#FF6A1A"/>
+
+  <g font-family="Inter, sans-serif" font-size="10" fill="#8B92A0">
+    <text x="104" y="60">Поле 3</text><text x="245" y="50">Поле 7</text><text x="400" y="72">Поле 9</text>
+    <text x="118" y="148">Поле 5</text><text x="266" y="144">Поле 2</text><text x="404" y="166">Поле 6</text>
+    <text x="172" y="234">Поле 4</text><text x="338" y="236" fill="#FF6A1A">Поле 11</text>
+  </g>
+
+  <!-- элементы управления картой -->
+  <g stroke="#34383F" fill="#14161A">
+    <rect x="14" y="14" width="24" height="24"/><rect x="14" y="38" width="24" height="24"/>
+  </g>
+  <g stroke="#8B92A0" stroke-width="1.4">
+    <path d="M20 26h12M26 20v12"/><path d="M20 50h12"/>
+  </g>
+</svg>

@@ -1,0 +1,66 @@
+{% extends 'client/_base.html' %}
+
+{% block section %}
+{% set files = deal.documents | selectattr('has_file') | selectattr('visible_to_client') | list %}
+{% set records = deal.documents | rejectattr('has_file') | list %}
+
+<div class="page-head">
+  <h1>Документы по заказу №{{ deal.number }}</h1>
+  <p>Файлы прикладывает менеджер АЭРОХАБ — они появляются здесь сразу после загрузки.</p>
+</div>
+
+<section class="block" style="margin-top:0;">
+  <div class="block-head">
+    <h2>Файлы от менеджера</h2>
+    <span class="block-note">{{ files|length }} файл(ов)</span>
+  </div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Документ</th><th>Файл</th><th>Формат</th><th>Размер</th><th>Загружен</th><th></th></tr></thead>
+      <tbody>
+        {% for d in files %}
+        <tr>
+          <td class="proc-name">{{ d.title }}</td>
+          <td class="proc-kpi">{{ d.file_name }}</td>
+          <td class="proc-code">{{ d.kind }}</td>
+          <td class="proc-kpi">{{ d.size_label }}</td>
+          <td class="proc-kpi">{{ d.uploaded_at|ru_date }}{% if d.uploaded_by %}<br>
+            <span class="muted">{{ d.uploaded_by.full_name }}</span>{% endif %}</td>
+          <td><a class="btn btn-outline btn-sm" href="/files/{{ d.id }}">Скачать</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty">Менеджер ещё не приложил файлы к этому заказу.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if records %}
+<section class="block">
+  <div class="block-head"><h2>Статусы документов</h2><span class="block-note">по данным CRM</span></div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Документ</th><th>Формат</th><th>Дата</th><th>Размер</th><th>Статус</th></tr></thead>
+      <tbody>
+        {% for d in records %}
+        <tr>
+          <td class="proc-name">{{ d.title }}</td>
+          <td class="proc-code">{{ d.kind }}</td>
+          <td class="proc-kpi">{{ d.date_label }}</td>
+          <td class="proc-kpi">{{ d.size_label }}</td>
+          <td><span class="doc-status {{ d.status_tone }}">{{ d.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<div class="oq-box draft" style="margin-top:28px;">
+  <h3>◆ Как получить оригиналы</h3>
+  <p>Подписанные экземпляры договора и спецификации передаются вместе с техникой при приёмке.
+     Электронные копии доступны здесь и дублируются на почту {{ user.email }}.</p>
+</div>
+{% endblock %}

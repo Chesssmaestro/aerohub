@@ -1,0 +1,55 @@
+{% extends 'dealer/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Оптовые заявки</h1>
+  <p>Заявка резервирует технику на складе. Отгрузка блокируется до подтверждения 100% оплаты.</p>
+</div>
+
+<div class="col-2-1">
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Модель</th><th>Кол-во</th><th>Статус</th><th>Комментарий</th><th>Создана</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="proc-name">{{ o.model }}</td>
+          <td class="proc-kpi">{{ o.qty }}</td>
+          <td><span class="doc-status {{ 'warn' if 'оплат' in o.status else ('blue' if o.status == 'Новая заявка' else '') }}">{{ o.status }}</span></td>
+          <td class="proc-kpi">{{ o.comment or '—' }}</td>
+          <td class="proc-code">{{ o.created_at|ru_date }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="empty">Заявок пока нет — создайте первую справа.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card solo">
+    <h4>Новая заявка</h4>
+    <form method="post" action="/dealer/orders">
+      <div class="f-row">
+        <label>Модель</label>
+        <select name="model">
+          <option>DJI T25</option>
+          <option>DJI T50</option>
+          <option>DJI T70</option>
+          <option selected>DJI T100</option>
+        </select>
+      </div>
+      <div class="f-row">
+        <label>Количество</label>
+        <input type="number" name="qty" value="1" min="1" max="20">
+      </div>
+      <div class="f-row">
+        <label>Комментарий</label>
+        <textarea name="comment" placeholder="Сроки, комплектация, конечный клиент."></textarea>
+      </div>
+      <button class="btn btn-primary btn-block">Создать заявку</button>
+    </form>
+    <p class="demo-note">Заявка попадает к менеджеру продаж АЭРОХАБ. Резерв подтверждается
+       после проверки склада.</p>
+  </div>
+</div>
+{% endblock %}

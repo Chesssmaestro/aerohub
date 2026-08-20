@@ -1,0 +1,28 @@
+{% extends 'cabinet_base.html' %}
+{% block title %}{{ crumb }} — кабинет клиента АЭРОХАБ{% endblock %}
+
+{% block sidebar %}
+<div class="side-label">Личный кабинет</div>
+<ul class="role-list">
+  {% for key, label in nav %}
+  <li>
+    <a href="/cabinet/{{ key }}" class="role-item {{ 'active' if key == active }}">
+      <span class="ri-dot"></span>{{ label }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
+{% block main %}
+{% include 'partials/org_head.html' %}
+
+{% for d in awaiting or [] %}
+<div class="draft-banner" style="background:rgba(255,106,26,0.08);border-color:var(--accent-dim);color:var(--accent);">
+  ● Заказ №{{ d.number }} ждёт вас: оплатите счёт и приложите чек.
+  <a href="/cabinet/orders/{{ d.id }}" class="link-accent" style="margin-left:auto;">Открыть заказ →</a>
+</div>
+{% endfor %}
+
+{% block section %}{% endblock %}
+{% endblock %}

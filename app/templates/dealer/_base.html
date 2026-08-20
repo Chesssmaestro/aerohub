@@ -1,0 +1,24 @@
+{% extends 'cabinet_base.html' %}
+{% block title %}{{ crumb }} — кабинет поставщика АЭРОХАБ{% endblock %}
+
+{% block sidebar %}
+<div class="side-label">Личный кабинет</div>
+<ul class="role-list">
+  {% for key, label in nav %}
+  <li>
+    <a href="/dealer/{{ key }}" class="role-item {{ 'active' if key == active }}">
+      <span class="ri-dot"></span>{{ label }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
+{% block main %}
+{% include 'partials/org_head.html' %}
+<div class="draft-banner">
+  ⚠ Черновик — дилерский контур не описан в исходных документах АЭРОХАБ, требует согласования
+  с руководителем продаж (см. ADR-EPA-101).
+</div>
+{% block section %}{% endblock %}
+{% endblock %}

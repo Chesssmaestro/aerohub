@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — АЭРОХАБ{% endblock %}
+
+{% block body %}
+<div class="auth-screen">
+  <a href="/" class="login-brand">
+    {% include 'partials/logo.html' %}
+    <div><b>АЭРОХАБ</b><span>Регистрация · {{ company.city }}</span></div>
+  </a>
+
+  {% if not portal %}
+    <div class="portal-picker">
+      {% for p in portals %}
+      <a class="portal-card" href="/register?portal={{ p.key }}">
+        <div class="pc-icon"><svg viewBox="0 0 24 24" fill="none">{{ p.icon|safe }}</svg></div>
+        <h3>{{ p.title }}</h3>
+        <p>{{ p.text }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="auth-switch">Уже есть доступ? <a href="/login">Войти</a></p>
+  {% else %}
+    {% set f = form or {} %}
+    <form class="login-form" method="post" action="/register">
+      <a class="lf-back" href="/register">← выбрать другой кабинет</a>
+      <h3>Регистрация — {{ portal_title|lower }}</h3>
+      {% if error %}<div class="form-error">{{ error }}</div>{% endif %}
+      <input type="hidden" name="portal" value="{{ portal }}">
+
+      <div class="f-row">
+        <label>ФИО</label>
+        <input type="text" name="full_name" value="{{ f.full_name or '' }}" placeholder="Иван Петров" required>
+      </div>
+      <div class="f-row">
+        <label>Почта</label>
+        <input type="email" name="email" value="{{ f.email or '' }}" placeholder="ivan@agrokom.ru" required>
+      </div>
+      <div class="f-row">
+        <label>Телефон</label>
+        <input type="tel" name="phone" value="{{ f.phone or '' }}" placeholder="+7 999 000-00-00">
+      </div>
+
+      {% if portal == 'staff' %}
+        <div class="f-row">
+          <label>Должность</label>
+          <select name="staff_role" required>
+            {% for r in staff_roles %}
+              <option value="{{ r.key }}" {{ 'selected' if f.staff_role == r.key }}>{{ r.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="f-row">
+          <label>Код приглашения</label>
+          <input type="text" name="staff_code" placeholder="выдаёт исполнительный директор" required>
+        </div>
+      {% else %}
+        <div class="f-row">
+          <label>Организация</label>
+          <input type="text" name="company_name" value="{{ f.company_name or '' }}"
+                 placeholder="{{ 'ООО «АгроТех Юг»' if portal == 'dealer' else 'ООО «Агроком»' }}" required>
+        </div>
+        <div class="f-two">
+          <div class="f-row">
+            <label>ИНН</label>
+            <input type="text" name="inn" value="{{ f.inn or '' }}" placeholder="6300000000">
+          </div>
+          <div class="f-row">
+            <label>Город</label>
+            <input type="text" name="city" value="{{ f.city or '' }}" placeholder="Самара">
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="f-two">
+        <div class="f-row">
+          <label>Пароль</label>
+          <input type="password" name="password" placeholder="от 8 символов" required>
+        </div>
+        <div class="f-row">
+          <label>Повторите</label>
+          <input type="password" name="password2" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block">Создать аккаунт</button>
+      <p class="demo-note">
+        {% if portal == 'staff' %}
+          Служебный контур закрыт: регистрация сотрудника требует кода приглашения и должности из
+          реестра ролей. Права раздела определяются должностью.
+        {% elif portal == 'dealer' %}
+          После регистрации создаётся карточка поставщика с уровнем Silver. Оптовые заявки и клиенты
+          ведутся в вашем кабинете.
+        {% else %}
+          После регистрации в кабинете появится карточка сделки: комплектация, документы, оплата,
+          поставка, обучение, учёт и сервис.
+        {% endif %}
+      </p>
+    </form>
+    <p class="auth-switch">Уже есть доступ? <a href="/login?portal={{ portal }}">Войти</a></p>
+  {% endif %}
+</div>
+{% endblock %}

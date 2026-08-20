@@ -1,0 +1,143 @@
+{% extends 'public_base.html' %}
+{% block title %}Запчасти DJI Agras — каталог АЭРОХАБ{% endblock %}
+
+{% macro qs(page=None, model=None, group=None, kind=None, stock=None, q=None) -%}
+?q={{ (q if q is not none else request.query_params.get('q', '')) | urlencode }}
+&model={{ (model if model is not none else request.query_params.get('model', '')) | urlencode }}
+&group={{ (group if group is not none else request.query_params.get('group', '')) | urlencode }}
+&kind={{ (kind if kind is not none else request.query_params.get('kind', '')) | urlencode }}
+&stock={{ (stock if stock is not none else request.query_params.get('stock', '')) | urlencode }}
+&page={{ page or 1 }}
+{%- endmacro %}
+
+{% block content %}
+<div class="pub-wrap">
+  <div class="roi-top">
+    <div>
+      <div class="eyebrow">Каталог · запчасти</div>
+      <h1>Запчасти DJI Agras</h1>
+    </div>
+    <div class="roi-desc">
+      {{ catalog_size|number }} позиций по всем платформам — от крепежа и уплотнений до насосов,
+      плат и лучей. Наличие и цена обновляются из складского учёта; отгрузка со склада в день заказа.
+    </div>
+    <div class="roi-actions">
+      <a href="/configurator" class="btn btn-ghost">Конфигуратор техники</a>
+      <div class="muted-sm">Не нашли деталь? Пришлите артикул или фото узла — подберём аналог.</div>
+    </div>
+  </div>
+
+  <div class="roi-grid">
+    <aside class="roi-params">
+      <form method="get" action="/parts">
+        <div class="param">
+          <label>Поиск по названию или артикулу</label>
+          <div class="stepper">
+            <input type="text" name="q" value="{{ q }}" placeholder="насос, YC.JG…">
+            <button type="submit" title="Найти">→</button>
+          </div>
+        </div>
+        <input type="hidden" name="model" value="{{ model }}">
+        <input type="hidden" name="group" value="{{ group }}">
+        <input type="hidden" name="kind" value="{{ kind }}">
+        <input type="hidden" name="stock" value="{{ stock }}">
+      </form>
+
+      <div class="param" style="margin-top:18px;">
+        <label>Наличие</label>
+        <div class="seg">
+          <a href="/parts{{ qs(page=1, stock='') }}" class="btn btn-sm {{ 'btn-outline' if not stock else 'btn-ghost' }}">Все</a>
+          <a href="/parts{{ qs(page=1, stock='in') }}" class="btn btn-sm {{ 'btn-outline' if stock == 'in' else 'btn-ghost' }}">В наличии</a>
+        </div>
+      </div>
+
+      <div class="side-label">Совместимость</div>
+      <ul class="role-list">
+        {% for name, count in models %}
+        <li>
+          <a href="/parts{{ qs(page=1, model='' if model == name else name) }}"
+             class="role-item {{ 'active' if model == name }}">
+            <span class="ri-dot"></span>AGRAS {{ name }}
+            <span style="margin-left:auto;" class="muted">{{ count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="side-label">Узел</div>
+      <ul class="role-list">
+        {% for name, count in groups %}
+        <li>
+          <a href="/parts{{ qs(page=1, group='' if group == name else name) }}"
+             class="role-item {{ 'active' if group == name }}">
+            <span class="ri-dot"></span>{{ name }}
+            <span style="margin-left:auto;" class="muted">{{ count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="side-label">Тип детали</div>
+      <ul class="role-list">
+        {% for name, count in kinds %}
+        <li>
+          <a href="/parts{{ qs(page=1, kind='' if kind == name else name) }}"
+             class="role-item {{ 'active' if kind == name }}">
+            <span class="ri-dot"></span>{{ name }}
+            <span style="margin-left:auto;" class="muted">{{ count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      {% if q or model or group or kind or stock %}
+      <a href="/parts" class="btn btn-ghost btn-block" style="margin-top:18px;">Сбросить фильтры</a>
+      {% endif %}
+    </aside>
+
+    <div class="roi-results">
+      <div class="roi-panel-title">
+        Найдено: {{ total|number }}
+        <span class="block-note">страница {{ page }} из {{ pages }}</span>
+      </div>
+
+      {% if items %}
+      <div class="parts-grid">
+        {% for p in items %}
+        <a class="part-card" href="/parts/{{ p.id }}">
+          <div class="pc-top">
+            <span class="mono pc-art">{{ p.article }}</span>
+            <span class="doc-status {{ 'ok' if p.in_stock else 'dim' }}">{{ p.stock }}</span>
+          </div>
+          <div class="pc-name">{{ p.name }}</div>
+          <div class="pc-models">
+            {% for m in p.model_list[:5] %}<span class="chip">{{ m }}</span>{% endfor %}
+            {% if p.model_list|length > 5 %}<span class="chip">+{{ p.model_list|length - 5 }}</span>{% endif %}
+          </div>
+          <div class="pc-bottom">
+            <span class="pc-price">{{ p.price|money if p.price else 'по запросу' }}</span>
+            <span class="link-accent">Подробнее →</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      <div class="pager">
+        {% if page > 1 %}<a class="btn btn-ghost btn-sm" href="/parts{{ qs(page=page-1) }}">← назад</a>{% endif %}
+        {% for p in range(1, pages + 1) %}
+          {% if p <= 2 or p > pages - 2 or (p >= page - 1 and p <= page + 1) %}
+            <a class="btn btn-sm {{ 'btn-outline' if p == page else 'btn-ghost' }}"
+               href="/parts{{ qs(page=p) }}">{{ p }}</a>
+          {% elif p == 3 and page > 4 or p == pages - 2 and page < pages - 3 %}
+            <span class="muted">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if page < pages %}<a class="btn btn-ghost btn-sm" href="/parts{{ qs(page=page+1) }}">вперёд →</a>{% endif %}
+      </div>
+      {% else %}
+      <p class="empty">Ничего не найдено. Измените фильтры или пришлите артикул — подберём вручную.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
