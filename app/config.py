@@ -4,9 +4,11 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Ключ подписи cookie-сессии. В проде задаётся переменной окружения.
-SECRET_KEY = os.getenv('AEROHUB_SECRET_KEY', 'aerohub-dev-secret-change-me')
+# `or` вместо второго аргумента getenv: пустая переменная на хостинге тоже
+# должна откатываться к дефолту, иначе вход и регистрация ломаются молча.
+SECRET_KEY = os.getenv('AEROHUB_SECRET_KEY') or 'aerohub-dev-secret-change-me'
 # Код приглашения для регистрации сотрудника.
-STAFF_CODE = os.getenv('AEROHUB_STAFF_CODE', 'AEROHUB2026')
+STAFF_CODE = os.getenv('AEROHUB_STAFF_CODE') or 'AEROHUB2026'
 
 DB_URL = os.getenv('AEROHUB_DB_URL', f'sqlite:///{BASE_DIR / "aerohub.db"}')
 
