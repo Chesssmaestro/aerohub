@@ -5,12 +5,12 @@ from sqlalchemy.orm import Session
 
 from .. import notifications
 from ..db import get_db
-from ..models import (ROLE_STAFF, Deal, DealerOrder, Document, Lead, Part, Request as LeadRequest,
-                      RoiCalculation, StaffRole, User)
+from ..models import (ROLE_CLIENT, ROLE_DEALER, ROLE_STAFF, Deal, DealerOrder, Document, Lead, Part,
+                      Request as LeadRequest, RoiCalculation, StaffRole, User)
 from .. import training as training_flow
 from ..orders import (STAFF_ACTIONS, STAFF_REJECTIONS, attach_invoice, log, move_to, stage_info,
                       stage_key)
-from ..security import require_role
+from ..security import can_impersonate, require_role, start_impersonation
 from ..seed import DEPT_TITLES, PIPELINE
 from ..storage import UploadError, delete_file, save_upload
 from ..templating import templates
@@ -38,7 +38,7 @@ def departments(db: Session) -> list[tuple[str, list[StaffRole]]]:
 
 
 CRUMBS = {'role': None, 'requests': 'Входящие заявки', 'orders': 'Заказы клиентов',
-          'parts': 'Склад запчастей', 'profile': 'Профиль'}
+          'parts': 'Склад запчастей', 'profile': 'Профиль', 'accounts': 'Клиенты и дилеры'}
 
 
 def context(request: Request, db: Session, user: User, role: StaffRole, section: str) -> dict:
@@ -52,6 +52,7 @@ def context(request: Request, db: Session, user: User, role: StaffRole, section:
         'can_view_requests': can_view_requests,
         'can_view_orders': can_view_orders,
         'can_keep_warehouse': user.staff_role in WAREHOUSE_KEEPERS,
+        'can_impersonate': can_impersonate(user),
         'org_name': 'АЭРОХАБ',
         'org_sub': f'{user.full_name} · {role.name}',
         # Заказы, где ход за нами, и новые заявки — только в разделах, доступных роли
@@ -104,6 +105,34 @@ def staff_profile(request: Request, db: Session = Depends(get_db),
         return RedirectResponse('/staff', status_code=303)
     return templates.TemplateResponse(request, 'staff/profile.html',
                                       context(request, db, user, role, 'profile'))
+
+
+@router.get('/accounts')
+def staff_accounts(request: Request, q: str = '', db: Session = Depends(get_db),
+                   user: User = Depends(require_role(ROLE_STAFF))):
+    """Все покупатели и дилеры — админ открывает любой кабинет."""
+    role = own_role(db, user)
+    if role is None or not can_impersonate(user):
+        return RedirectResponse('/staff', status_code=303)
+    stmt = select(User).where(User.role.in_((ROLE_CLIENT, ROLE_DEALER))).order_by(User.id.desc())
+    q = q.strip()
+    if q:
+        like = f'%{q.lower()}%'
+        stmt = stmt.where(or_(func.lower(User.email).like(like), func.lower(User.full_name).like(like)))
+    ctx = context(request, db, user, role, 'accounts')
+    ctx.update({'accounts': list(db.scalars(stmt)), 'q': q})
+    return templates.TemplateResponse(request, 'staff/accounts.html', ctx)
+
+
+@router.post('/accounts/{user_id}/open')
+def open_account(user_id: int, request: Request, db: Session = Depends(get_db),
+                 user: User = Depends(require_role(ROLE_STAFF))):
+    target = db.get(User, user_id)
+    # Открываются только кабинеты клиентов и дилеров — не других сотрудников
+    if not can_impersonate(user) or target is None or target.role not in (ROLE_CLIENT, ROLE_DEALER):
+        return RedirectResponse('/staff/accounts', status_code=303)
+    start_impersonation(request, user, target)
+    return RedirectResponse(target.home_url, status_code=303)
 
 
 def _order_guard(db: Session, user: User) -> StaffRole | None:

@@ -7,7 +7,8 @@ from .. import kp_flow
 from ..config import STAFF_CODE
 from ..db import get_db
 from ..models import ROLE_CLIENT, ROLE_DEALER, ROLE_HOME, ROLE_STAFF, Company, StaffRole, User
-from ..security import get_current_user, hash_password, login_user, logout_user, verify_password
+from ..security import (get_current_user, hash_password, login_user, logout_user, stop_impersonation,
+                        verify_password)
 from ..templating import templates
 
 router = APIRouter()
@@ -172,5 +173,15 @@ def register_submit(
 
 @router.post('/logout')
 def logout(request: Request):
+    # Из кабинета клиента, открытого админом, «Выйти» возвращает в админку, а не разлогинивает
+    if stop_impersonation(request):
+        return RedirectResponse('/staff/accounts', status_code=303)
     logout_user(request)
+    return RedirectResponse('/', status_code=303)
+
+
+@router.post('/admin/return')
+def admin_return(request: Request):
+    if stop_impersonation(request):
+        return RedirectResponse('/staff/accounts', status_code=303)
     return RedirectResponse('/', status_code=303)

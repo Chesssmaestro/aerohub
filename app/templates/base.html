@@ -41,8 +41,16 @@
 <link rel="icon" href="{{ static('img/favicon-64.png') }}" type="image/png" sizes="64x64">
 <link rel="apple-touch-icon" href="{{ static('img/apple-touch-icon.png') }}">
 </head>
-<body>
+<body{% if request.session.get('admin_id') %} class="is-impersonating"{% endif %}>
 {% block body %}{% endblock %}
+{% if request.session.get('admin_id') %}
+<div class="imp-bar" role="status">
+  <span>Вы в кабинете <b>{{ user.full_name if user else 'пользователя' }}</b>{% if user and user.company %} · {{ user.company.name }}{% endif %} — режим администратора</span>
+  <form method="post" action="/admin/return">
+    <button type="submit" class="btn btn-primary btn-sm">Вернуться в админку</button>
+  </form>
+</div>
+{% endif %}
 <script src="{{ static('js/nav.js') }}" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js" defer></script>

@@ -1,0 +1,45 @@
+{% extends 'staff/_base.html' %}
+
+{% block section %}
+<div class="page-head">
+  <h1>Клиенты и дилеры</h1>
+  <p>Откройте кабинет любого покупателя или дилера — вы увидите его так же, как видит он сам:
+     сделки, заказы, документы, оплату. Вернуться в свой кабинет — кнопкой на плашке внизу экрана или «Выйти».</p>
+</div>
+
+<form method="get" action="/staff/accounts" class="inline-form" style="margin-bottom:var(--sp-5);">
+  <div class="f-row">
+    <label for="acc-q" class="visually-hidden">Поиск</label>
+    <input id="acc-q" type="search" name="q" value="{{ q }}" placeholder="Имя или почта">
+  </div>
+  <button type="submit" class="btn btn-outline btn-sm">Найти</button>
+  {% if q %}<a href="/staff/accounts" class="btn btn-ghost btn-sm">Сбросить</a>{% endif %}
+</form>
+
+<section class="block">
+  <div class="block-head"><h2>Все аккаунты</h2><span class="block-note">{{ accounts|length }} · новые — сверху</span></div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Пользователь</th><th>Кабинет</th><th>Организация</th><th>Заказов</th><th>С нами с</th><th></th></tr></thead>
+      <tbody>
+        {% for a in accounts %}
+        <tr>
+          <td class="proc-name">{{ a.full_name }}<br><span class="muted">{{ a.email }}{% if a.phone %} · {{ a.phone }}{% endif %}</span></td>
+          <td><span class="doc-status {{ 'blue' if a.role == 'dealer' else 'ok' }}">{{ 'Дилер' if a.role == 'dealer' else 'Покупатель' }}</span></td>
+          <td class="proc-kpi">{{ a.company.name if a.company else '—' }}{% if a.company and a.company.city %}<br><span class="muted">{{ a.company.city }}</span>{% endif %}</td>
+          <td class="proc-kpi">{{ a.company.deals|length if a.company else 0 }}</td>
+          <td class="proc-kpi">{{ a.created_at|ru_date }}</td>
+          <td>
+            <form method="post" action="/staff/accounts/{{ a.id }}/open">
+              <button type="submit" class="btn btn-outline btn-sm">Открыть кабинет</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="empty">{{ 'Никого не нашли.' if q else 'Покупателей и дилеров пока нет — они появятся после регистрации на сайте.' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

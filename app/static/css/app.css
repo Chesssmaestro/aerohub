@@ -1196,3 +1196,16 @@ h1,h2,h3,.display{font-family:var(--font-display);font-weight:600;letter-spacing
 @media(max-width:480px){
   .topbar .brand-logo .bl-text{display:none;}
 }
+
+/* Режим администратора в чужом кабинете: плашка закреплена внизу, её не спутать с интерфейсом клиента */
+.imp-bar{position:fixed;left:0;right:0;bottom:0;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-4);
+  padding:12px max(var(--gutter), env(safe-area-inset-left)) calc(12px + env(safe-area-inset-bottom));
+  background:var(--panel);border-top:2px solid var(--accent);font-size:var(--fs-sm);color:var(--text-muted);}
+.imp-bar b{color:var(--text);font-weight:600;}
+.imp-bar form{flex:0 0 auto;}
+body.is-impersonating{padding-bottom:72px;}
+@media(max-width:600px){
+  .imp-bar{flex-direction:column;align-items:stretch;gap:var(--sp-3);}
+  .imp-bar .btn{width:100%;}
+  body.is-impersonating{padding-bottom:120px;}
+}

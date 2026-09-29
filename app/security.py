@@ -44,11 +44,35 @@ def verify_password(password: str, stored: str) -> bool:
 
 
 def login_user(request: Request, user: User) -> None:
+    request.session.pop('admin_id', None)
     request.session['user_id'] = user.id
 
 
 def logout_user(request: Request) -> None:
     request.session.clear()
+
+
+# Кто из сотрудников может открывать кабинеты клиентов и дилеров
+IMPERSONATORS = {'ceo'}
+
+
+def can_impersonate(user: User | None) -> bool:
+    return user is not None and user.role == 'staff' and user.staff_role in IMPERSONATORS
+
+
+def start_impersonation(request: Request, admin: User, target: User) -> None:
+    """Админ входит в кабинет пользователя; свой вход запоминается, чтобы вернуться."""
+    request.session['admin_id'] = admin.id
+    request.session['user_id'] = target.id
+
+
+def stop_impersonation(request: Request) -> bool:
+    """Возвращает админа в свой аккаунт. False — если режим просмотра не был включён."""
+    admin_id = request.session.pop('admin_id', None)
+    if not admin_id:
+        return False
+    request.session['user_id'] = admin_id
+    return True
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User | None:

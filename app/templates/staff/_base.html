@@ -25,6 +25,13 @@
     </a>
   </li>
   {% endif %}
+  {% if can_impersonate %}
+  <li>
+    <a href="/staff/accounts" class="role-item {{ 'active' if active == 'accounts' }}">
+      <span class="ri-dot"></span>Клиенты и дилеры
+    </a>
+  </li>
+  {% endif %}
   {% if can_keep_warehouse %}
   <li>
     <a href="/staff/parts" class="role-item {{ 'active' if active == 'parts' }}">
