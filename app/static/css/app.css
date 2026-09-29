@@ -1092,7 +1092,7 @@ h1,h2,h3,.display{font-family:var(--font-display);font-weight:600;letter-spacing
 .lineup-head p{font-size:var(--fs-body);color:var(--text-muted);line-height:1.7;max-width:62ch;}
 .cta-band{grid-template-columns:1fr;gap:var(--sp-6);align-items:start;}
 .cta-actions{justify-content:flex-start;}
-.work{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px, 5vw, 96px);}
+@media(min-width:901px){.work{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px, 5vw, 96px);}}
 .work-list{max-width:900px;}
 
 /* Поля страницы растут с шириной экрана: на 2000px текст отходит от края на ~100px.
@@ -1150,7 +1150,13 @@ h1,h2,h3,.display{font-family:var(--font-display);font-weight:600;letter-spacing
 .roi-top{grid-template-columns:minmax(0,1fr) auto;column-gap:var(--sp-8);row-gap:var(--sp-5);}
 .roi-top > :first-child{grid-column:1 / -1;}
 .roi-top .roi-actions{min-width:260px;}
-.roi-top h1, .hero h1, .page-head h1, .part-title{overflow-wrap:break-word;hyphens:auto;}
+/* Перенос только как крайняя мера для очень длинного слова — без дефисов посреди слова */
+.roi-top h1, .hero h1, .page-head h1, .part-title{overflow-wrap:break-word;hyphens:manual;}
+/* Заголовок hero растёт вместе с колонкой: каждая из трёх строк помещается целиком
+   (при 1280px — ~47px, при 1920px — ~68px) */
+.hero h1{font-size:clamp(2.25rem, 0.4rem + 3.2vw, 5rem);}
+/* Ключевые цифры: кегль по ширине колонки, «га/день» может уйти на вторую строку, а не за край */
+.fig-num{font-size:clamp(1.5rem, 0.6rem + 2vw, 2.75rem);white-space:normal;overflow-wrap:break-word;}
 @media(max-width:700px){
   .roi-top{grid-template-columns:1fr;}
   .roi-top .roi-actions{min-width:0;}
