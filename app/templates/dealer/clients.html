@@ -30,12 +30,12 @@
     <h4>Добавить клиента</h4>
     <form method="post" action="/dealer/clients">
       <div class="f-row">
-        <label>Название</label>
-        <input type="text" name="name" placeholder="КФХ Воронов" required>
+        <label for="f-name">Название</label>
+        <input id="f-name" type="text" name="name" placeholder="КФХ Воронов" required>
       </div>
       <div class="f-row">
-        <label>Стадия</label>
-        <select name="stage">
+        <label for="f-stage">Стадия</label>
+        <select id="f-stage" name="stage">
           <option>Новый лид</option>
           <option>Переговоры</option>
           <option>КП отправлено</option>
@@ -44,12 +44,12 @@
         </select>
       </div>
       <div class="f-row">
-        <label>Контакт</label>
-        <input type="text" name="contact" placeholder="+7 918 000-00-00">
+        <label for="f-contact">Контакт</label>
+        <input id="f-contact" type="text" name="contact" placeholder="+7 918 000-00-00">
       </div>
       <div class="f-row">
-        <label>Заметка</label>
-        <textarea name="note" placeholder="Площадь, культуры, интересующая модель."></textarea>
+        <label for="f-note">Заметка</label>
+        <textarea id="f-note" name="note" placeholder="Площадь, культуры, интересующая модель."></textarea>
       </div>
       <button class="btn btn-primary btn-block">Добавить</button>
     </form>

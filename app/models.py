@@ -5,14 +5,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
 
-# Роли входа: покупатель (клиент), поставщик (дилер), сотрудник
+# Роли входа: покупатель (клиент), дилер, сотрудник
 ROLE_CLIENT = 'client'
 ROLE_DEALER = 'dealer'
 ROLE_STAFF = 'staff'
 
 ROLE_TITLES = {
     ROLE_CLIENT: 'Кабинет клиента',
-    ROLE_DEALER: 'Кабинет поставщика',
+    ROLE_DEALER: 'Кабинет дилера',
     ROLE_STAFF: 'Кабинет сотрудника',
 }
 
@@ -60,6 +60,16 @@ class User(Base):
     @property
     def home_url(self) -> str:
         return ROLE_HOME.get(self.role, '/')
+
+    @property
+    def org_name(self) -> str:
+        """Название организации для шапки; частному лицу — его имя."""
+        name = (self.company.name if self.company else '') or ''
+        return self.full_name if name.strip().lower() in ('', 'none', '-', '—') else name
+
+    @property
+    def profile_url(self) -> str:
+        return ROLE_HOME.get(self.role, '') + '/profile'
 
 
 class Deal(Base):
@@ -234,8 +244,26 @@ class Training(Base):
     participants: Mapped[int] = mapped_column(Integer, default=2)
     confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Запись на курс: not_planned → requested (клиент записал операторов)
+    # → scheduled (учебный центр подтвердил) → done (операторы допущены)
+    status: Mapped[str] = mapped_column(String(20), default='not_planned')
+    format: Mapped[str] = mapped_column(String(80), default='')
+    operators: Mapped[str] = mapped_column(Text, default='')
+    note: Mapped[str] = mapped_column(Text, default='')
+    done_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     deal: Mapped[Deal] = relationship(back_populates='training')
+
+    @property
+    def state(self) -> str:
+        # Старые записи знали только «подтверждено» — считаем их подтверждённым курсом
+        if self.status == 'not_planned' and self.confirmed:
+            return 'scheduled'
+        return self.status or 'not_planned'
+
+    @property
+    def operator_list(self) -> list[str]:
+        return [name for name in (self.operators or '').splitlines() if name.strip()]
 
 
 class AccountingItem(Base):

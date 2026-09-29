@@ -5,6 +5,8 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import notifications
+from ..assign import ensure_owner
 from ..catalog import MODELS, OPTIONS, PACKAGES
 from ..db import get_db
 from ..models import ROLE_CLIENT, Deal, Document, Request as LeadRequest, User
@@ -13,7 +15,8 @@ from ..orders import (attach_receipt, client_can_upload_receipt, create_order, s
 from ..security import require_role
 from ..seed import PIPELINE
 from ..storage import UploadError, save_upload
-from ..templating import ru_month_year, templates
+from .. import training as training_flow
+from ..templating import money, ru_month_year, templates
 
 router = APIRouter(prefix='/cabinet')
 
@@ -29,7 +32,8 @@ NAV = [
     ('accounting', 'Учёт и ЭПР'),
     ('ops', 'Обработки'),
     ('service', 'Сервис'),
-    ('specialist', 'Специалист'),
+    ('specialist', 'Ваш менеджер'),
+    ('profile', 'Профиль'),
 ]
 NAV_TITLES = dict(NAV)
 
@@ -37,7 +41,11 @@ NAV_TITLES = dict(NAV)
 def get_deal(db: Session, user: User) -> Deal | None:
     if not user.company_id:
         return None
-    return db.scalar(select(Deal).where(Deal.company_id == user.company_id).order_by(Deal.id.desc()))
+    deal = db.scalar(select(Deal).where(Deal.company_id == user.company_id).order_by(Deal.id.desc()))
+    # Заказам, оформленным до автоназначения, ответственный назначается при первом открытии
+    if deal is not None and ensure_owner(db, deal):
+        db.commit()
+    return deal
 
 
 def deal_stats(deal: Deal | None) -> dict:
@@ -78,9 +86,9 @@ def context(request: Request, db: Session, user: User, section: str) -> dict:
         'request': request, 'user': user, 'nav': NAV, 'active': section,
         'crumb': NAV_TITLES.get(section, ''), 'deal': deal,
         'awaiting': awaiting,
-        'org_name': user.company.name if user.company else user.full_name,
+        'org_name': user.org_name,
         'org_sub': f'{user.full_name} · клиент с {ru_month_year(user.created_at)}',
-        'notifications': len(awaiting),
+        'notifications': notifications.for_client(awaiting),
     }
 
 
@@ -95,8 +103,18 @@ def render(request: Request, db: Session, user: User, section: str, **extra):
             'deals': deals,
             'stage_of': {d.id: stage_info(d) for d in deals},
             'models': MODELS, 'packages': PACKAGES, 'options': OPTIONS,
+            'kp_requests': list(db.scalars(select(LeadRequest).where(LeadRequest.user_id == user.id)
+                                           .order_by(LeadRequest.id.desc()))),
         })
         return templates.TemplateResponse(request, 'client/orders.html', ctx)
+    if section in ('training', 'overview'):
+        ctx.update({'slots': training_flow.upcoming_slots(), 'formats': training_flow.FORMATS,
+                    'train_steps': training_flow.STEPS, 'max_operators': training_flow.MAX_OPERATORS,
+                    'train_step': training_flow.step_index(ctx['deal'].training if ctx['deal'] else None),
+                    'order_stage': stage_info(ctx['deal']) if ctx['deal'] else None,
+                    'error': request.query_params.get('error')})
+    if section == 'profile':
+        return templates.TemplateResponse(request, 'client/profile.html', ctx)
     if ctx['deal'] is None:
         return templates.TemplateResponse(request, 'client/empty.html', ctx)
     return templates.TemplateResponse(request, f'client/{section}.html', ctx)
@@ -109,12 +127,12 @@ def cabinet_root(request: Request, db: Session = Depends(get_db),
 
 
 @router.get('/{section}')
-def cabinet_section(section: str, request: Request, sent: str = '', placed: str = '',
+def cabinet_section(section: str, request: Request, sent: str = '', placed: str = '', kp: str = '',
                     db: Session = Depends(get_db),
                     user: User = Depends(require_role(ROLE_CLIENT))):
     if section not in NAV_TITLES:
         return RedirectResponse('/cabinet', status_code=303)
-    return render(request, db, user, section, sent=bool(sent), placed=bool(placed))
+    return render(request, db, user, section, sent=bool(sent), placed=bool(placed), kp_sent=bool(kp))
 
 
 @router.post('/orders')
@@ -129,7 +147,7 @@ def place_order(request: Request, model: str = Form(...), package: str = Form('p
     db.add(LeadRequest(name=user.full_name, phone=user.phone, email=user.email,
                        farm=user.company.name if user.company else '',
                        comment=f'Оформлен заказ №{deal.number}: {deal.product} '
-                               f'«{deal.package}» на {int(deal.amount):,} ₽'.replace(',', ' ')
+                               f'«{deal.package}» на {money(deal.amount)}'
                                + (f'. {deal.comment}' if deal.comment else ''),
                        source='Заказ из кабинета', user_id=user.id))
     db.commit()
@@ -194,18 +212,37 @@ def upload_client_document(deal_id: int, doc_type: str = Form('receipt'), title:
     return RedirectResponse(f'/cabinet/orders/{deal_id}', status_code=303)
 
 
-@router.post('/training/confirm')
-def confirm_training(request: Request, db: Session = Depends(get_db),
-                     user: User = Depends(require_role(ROLE_CLIENT))):
+@router.post('/training/book')
+def book_training(slot: str = Form(''), format: str = Form(''), operator: list[str] = Form(default=[]),
+                  note: str = Form(''), db: Session = Depends(get_db),
+                  user: User = Depends(require_role(ROLE_CLIENT))):
+    """Клиент выбирает поток и формат и вписывает операторов — запись уходит в учебный центр."""
     deal = get_deal(db, user)
-    if deal and deal.training and not deal.training.confirmed:
-        deal.training.confirmed = True
-        deal.training.confirmed_at = datetime.now()
-        db.add(LeadRequest(name=user.full_name, phone=user.phone, email=user.email,
-                           farm=user.company.name if user.company else '',
-                           comment=f'Клиент подтвердил дату обучения: {deal.training.date_label}, '
-                                   f'{deal.training.participants} участника.',
-                           source='Кабинет клиента · обучение', user_id=user.id))
+    if deal is None or deal.training is None or deal.training.state in ('scheduled', 'done'):
+        return RedirectResponse('/cabinet/training', status_code=303)
+    slots = {s['key']: s['label'] for s in training_flow.upcoming_slots()}
+    formats = {f['key']: f['name'] for f in training_flow.FORMATS}
+    names = [n for n in operator if n.strip()]
+    if slot not in slots or format not in formats or not names:
+        return RedirectResponse('/cabinet/training?error=1', status_code=303)
+
+    training_flow.book(deal.training, slots[slot], formats[format], names, note)
+    db.add(LeadRequest(name=user.full_name, phone=user.phone, email=user.email,
+                       farm=user.company.name if user.company else '',
+                       comment=f'Запись на обучение по заказу №{deal.number}: {slots[slot]}, '
+                               f'{formats[format].lower()}. Операторы: {", ".join(n.strip() for n in names)}.'
+                               + (f' {note.strip()}' if note.strip() else ''),
+                       source='Кабинет клиента · обучение', user_id=user.id))
+    db.commit()
+    return RedirectResponse('/cabinet/training?sent=1', status_code=303)
+
+
+@router.post('/training/change')
+def change_training(db: Session = Depends(get_db), user: User = Depends(require_role(ROLE_CLIENT))):
+    """Пока учебный центр не подтвердил запись, её можно изменить."""
+    deal = get_deal(db, user)
+    if deal and deal.training and deal.training.state == 'requested':
+        deal.training.status = 'not_planned'
         db.commit()
     return RedirectResponse('/cabinet/training', status_code=303)
 
@@ -217,5 +254,5 @@ def send_message(request: Request, topic: str = Form('Вопрос по сдел
                        farm=user.company.name if user.company else '',
                        comment=text.strip(), source=f'Кабинет клиента · {topic}', user_id=user.id))
     db.commit()
-    return RedirectResponse(f'/cabinet/{"specialist" if topic == "Специалист" else "config"}?sent=1',
+    return RedirectResponse(f'/cabinet/{"specialist" if topic in ("Специалист", "Менеджер") else "config"}?sent=1',
                             status_code=303)

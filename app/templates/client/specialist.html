@@ -2,33 +2,36 @@
 
 {% block section %}
 <div class="page-head">
-  <h1>Ваш специалист</h1>
-  <p>Инженер внедрения ведёт сделку после подписания договора: комплектация, поставка,
-     обучение, ввод в эксплуатацию и первые обработки.</p>
+  <h1>Ваш менеджер</h1>
+  <p>Менеджер назначен автоматически, когда вы оформили заказ. Он ведёт его до конца: согласует
+     состав и счёт, организует поставку и обучение операторов, отвечает на вопросы.</p>
 </div>
 
 <div class="col-1-2">
-  <div class="card solo">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <div class="tb-avatar" style="width:52px;height:52px;font-size:18px;">{{ deal.specialist_name[:1] }}</div>
+  <div class="card solo owner-card">
+    <div class="owner-id">
+      <div class="ph-avatar" aria-hidden="true">{{ deal.specialist_name[:1] }}</div>
       <div>
-        <b style="font-family:'Unbounded';font-size:16px;">{{ deal.specialist_name }}</b>
+        <b class="owner-name">{{ deal.specialist_name }}</b>
         <div class="muted">{{ deal.specialist_role }}</div>
+        <span class="status-chip ok" style="margin-top:8px;">Ведёт заказ №{{ deal.number }}</span>
       </div>
     </div>
-    <div class="doc-row" style="margin-top:16px;"><span>Телефон</span><span class="doc-status">{{ deal.specialist_phone }}</span></div>
-    <div class="doc-row"><span>Почта</span><span class="doc-status">{{ deal.specialist_email }}</span></div>
-    <div class="doc-row"><span>Сделка</span><span class="doc-status">Договор №{{ deal.number }}</span></div>
+    <div class="doc-row" style="margin-top:18px;"><span>Телефон</span>
+      <a class="doc-status link-accent" href="tel:{{ deal.specialist_phone|replace(' ', '') }}">{{ deal.specialist_phone }}</a></div>
+    <div class="doc-row"><span>Почта</span>
+      <a class="doc-status link-accent" href="mailto:{{ deal.specialist_email }}">{{ deal.specialist_email }}</a></div>
+    <div class="doc-row"><span>Время ответа</span><span class="doc-status dim">до 30 минут в рабочее время</span></div>
   </div>
 
   <div class="card solo">
-    <h4>Написать специалисту</h4>
+    <h4>Написать менеджеру</h4>
     {% if sent %}<div class="form-ok">Сообщение отправлено. Ответ придёт на {{ user.email }}.</div>{% endif %}
     <form method="post" action="/cabinet/message">
-      <input type="hidden" name="topic" value="Специалист">
+      <input type="hidden" name="topic" value="Менеджер">
       <div class="f-row">
-        <label>Сообщение</label>
-        <textarea name="text" placeholder="Вопрос по поставке, комплектации, обучению или эксплуатации." required></textarea>
+        <label for="f-text">Сообщение</label>
+        <textarea id="f-text" name="text" placeholder="Вопрос по поставке, комплектации, обучению или эксплуатации." required></textarea>
       </div>
       <button class="btn btn-primary">Отправить сообщение</button>
     </form>

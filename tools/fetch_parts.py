@@ -16,7 +16,7 @@ from pathlib import Path
 
 BASE = 'https://agi-systems.ru/catalog/parts/'
 OUT = Path(__file__).resolve().parent.parent / 'data' / 'parts.json'
-HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; AEROHUB catalog import)'}
+HEADERS = {'User-Agent': 'Mozilla/5.0 (compatible; АЭРОХАБ catalog import)'}
 
 CARD_RE = re.compile(
     r'href="/catalog/parts/(?P<id>\d+)/"[^>]*js-notice-block__title[^>]*>\s*<span>(?P<name>.*?)</span>',

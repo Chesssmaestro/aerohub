@@ -4,7 +4,6 @@
 {% set shell_class = 'wide-side' %}
 
 {% block sidebar %}
-{% if can_view_requests or can_view_orders or can_keep_warehouse %}
 <div class="side-label">Работа</div>
 <ul class="role-list">
   <li>
@@ -33,8 +32,12 @@
     </a>
   </li>
   {% endif %}
+  <li>
+    <a href="/staff/profile" class="role-item {{ 'active' if active == 'profile' }}">
+      <span class="ri-dot"></span>Профиль
+    </a>
+  </li>
 </ul>
-{% endif %}
 
 {% for title, items in groups %}
 <div class="side-label">{{ title }}</div>

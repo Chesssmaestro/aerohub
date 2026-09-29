@@ -3,7 +3,7 @@
 {% block section %}
 <div class="page-head">
   <h1>Входящие заявки</h1>
-  <p>Заявки с сайта и из кабинетов клиентов, оптовые заявки поставщиков и последние расчёты
+  <p>Заявки с сайта и из кабинетов клиентов, оптовые заявки дилеров и последние расчёты
      ROI-калькулятора. Норматив первого контакта — 30 минут (SAL-210).</p>
 </div>
 
@@ -12,7 +12,7 @@
   <div class="kpi-card"><div class="kl">Новых</div>
     <div class="kv">{{ requests|selectattr('status', 'equalto', 'Новая')|list|length }}</div></div>
   <div class="kpi-card"><div class="kl">Оптовых заявок</div><div class="kv">{{ dealer_orders|length }}</div></div>
-  <div class="kpi-card"><div class="kl">Клиентов поставщиков</div><div class="kv">{{ leads|length }}</div></div>
+  <div class="kpi-card"><div class="kl">Клиентов дилеров</div><div class="kv">{{ leads|length }}</div></div>
 </div>
 
 <section class="block">
@@ -40,7 +40,7 @@
 
 <div class="two-col" style="margin-top:32px;">
   <section class="block" style="margin-top:0;">
-    <div class="block-head"><h2>Оптовые заявки поставщиков</h2></div>
+    <div class="block-head"><h2>Оптовые заявки дилеров</h2></div>
     <div class="table-wrap">
       <table class="proc-table">
         <thead><tr><th>Модель</th><th>Кол-во</th><th>Статус</th><th>Дата</th></tr></thead>
@@ -71,7 +71,7 @@
             <td class="proc-name">{{ c.area|number }} га</td>
             <td class="proc-kpi">{{ c.crops }}</td>
             <td class="proc-kpi">{{ c.cost_per_ha|number }}</td>
-            <td class="proc-kpi">{{ c.season_saving|mln }}</td>
+            <td class="proc-kpi">{{ c.season_saving|number(0) }} ₽</td>
             <td class="proc-code">{{ c.payback_months|number(1) }} мес.</td>
           </tr>
           {% else %}

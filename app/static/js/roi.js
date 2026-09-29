@@ -126,10 +126,10 @@ function drawChart(s) {
     const yy = y(v).toFixed(1);
     parts.push(`<line x1="${padL}" y1="${yy}" x2="${W - padR}" y2="${yy}" stroke="#23262D" stroke-width="1"/>`);
     parts.push(`<text x="${padL - 10}" y="${yy}" text-anchor="end" dominant-baseline="middle"
-      font-family="JetBrains Mono, monospace" font-size="10" fill="#5B6270">${(v / 1e6).toFixed(0)}</text>`);
+      font-family="Golos Text, sans-serif" font-size="10" fill="#5B6270">${(v / 1e6).toFixed(0)}</text>`);
   }
   parts.push(`<text x="14" y="${padT + plotH / 2}" text-anchor="middle" font-size="10" fill="#5B6270"
-    font-family="Inter, sans-serif" transform="rotate(-90 14 ${padT + plotH / 2})">млн ₽</text>`);
+    font-family="Golos Text, sans-serif" transform="rotate(-90 14 ${padT + plotH / 2})">млн ₽</text>`);
 
   // нулевая линия
   parts.push(`<line x1="${padL}" y1="${y(0).toFixed(1)}" x2="${W - padR}" y2="${y(0).toFixed(1)}"
@@ -139,10 +139,10 @@ function drawChart(s) {
   for (let m = 0; m <= MONTHS; m++) {
     if (m % 2 !== 0) continue;
     parts.push(`<text x="${x(m).toFixed(1)}" y="${H - 14}" text-anchor="middle"
-      font-family="JetBrains Mono, monospace" font-size="10" fill="#5B6270">${m}</text>`);
+      font-family="Golos Text, sans-serif" font-size="10" fill="#5B6270">${m}</text>`);
   }
   parts.push(`<text x="${padL + plotW / 2}" y="${H - 1}" text-anchor="middle" font-size="10"
-    fill="#5B6270" font-family="Inter, sans-serif">Месяц</text>`);
+    fill="#5B6270" font-family="Golos Text, sans-serif">Месяц</text>`);
 
   // линия денежного потока
   const path = points.map((v, m) => `${m === 0 ? 'M' : 'L'}${x(m).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
@@ -158,18 +158,14 @@ function drawChart(s) {
       stroke="#FF6A1A" stroke-width="1" stroke-dasharray="4 4" opacity="0.7"/>`);
     parts.push(`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="6" fill="none"
       stroke="#FF6A1A" stroke-width="2"/>`);
-    const label = `Окупаемость · ${Math.round(s.payback)} месяцев`;
+    const label = `Окупаемость: ${Math.round(s.payback)} мес.`;
     const boxW = label.length * 6.2 + 20;
     const boxX = Math.min(px + 12, W - padR - boxW);
     parts.push(`<rect x="${boxX.toFixed(1)}" y="${(py + 12).toFixed(1)}" width="${boxW.toFixed(1)}" height="24"
-      fill="#1A1D22" stroke="#34383F"/>`);
+      rx="6" fill="#1A1D22" stroke="#34383F"/>`);
     parts.push(`<text x="${(boxX + boxW / 2).toFixed(1)}" y="${(py + 28).toFixed(1)}" text-anchor="middle"
-      font-size="11" fill="#F2F3F5" font-family="Inter, sans-serif">${label}</text>`);
+      font-size="11" fill="#F2F2F2" font-family="Golos Text, sans-serif">${label}</text>`);
   }
-
-  // стартовая точка
-  parts.push(`<text x="${x(0) + 6}" y="${(y(points[0]) + 16).toFixed(1)}"
-    font-family="JetBrains Mono, monospace" font-size="10" fill="#FF6A1A">${fmtMln(points[0])}</text>`);
 
   svg.innerHTML = parts.join('');
 }

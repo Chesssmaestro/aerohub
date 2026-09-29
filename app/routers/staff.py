@@ -3,10 +3,12 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from .. import notifications
 from ..db import get_db
 from ..models import (ROLE_STAFF, Deal, DealerOrder, Document, Lead, Part, Request as LeadRequest,
                       RoiCalculation, StaffRole, User)
-from ..orders import (STAFF_ACTIONS, STAFF_REJECTIONS, attach_invoice, move_to, stage_info,
+from .. import training as training_flow
+from ..orders import (STAFF_ACTIONS, STAFF_REJECTIONS, attach_invoice, log, move_to, stage_info,
                       stage_key)
 from ..security import require_role
 from ..seed import DEPT_TITLES, PIPELINE
@@ -36,25 +38,24 @@ def departments(db: Session) -> list[tuple[str, list[StaffRole]]]:
 
 
 CRUMBS = {'role': None, 'requests': 'Входящие заявки', 'orders': 'Заказы клиентов',
-          'parts': 'Склад запчастей'}
+          'parts': 'Склад запчастей', 'profile': 'Профиль'}
 
 
 def context(request: Request, db: Session, user: User, role: StaffRole, section: str) -> dict:
-    # Заказы, где ход за нами: принять заявку, выставить счёт, проверить чек, отгрузить
-    our_move = len([d for d in db.scalars(select(Deal))
-                    if stage_info(d)['actor'] == 'staff'])
+    can_view_requests = user.staff_role in REQUEST_VIEWERS
+    can_view_orders = user.staff_role in ORDER_VIEWERS
     return {
         'request': request, 'user': user, 'role': role, 'active': section,
         'crumb': CRUMBS.get(section) or role.name,
         'groups': departments(db), 'pipeline': PIPELINE,
         'can_view_all': user.staff_role in ALL_ROLES_VIEWERS,
-        'can_view_requests': user.staff_role in REQUEST_VIEWERS,
-        'can_view_orders': user.staff_role in ORDER_VIEWERS,
+        'can_view_requests': can_view_requests,
+        'can_view_orders': can_view_orders,
         'can_keep_warehouse': user.staff_role in WAREHOUSE_KEEPERS,
         'org_name': 'АЭРОХАБ',
         'org_sub': f'{user.full_name} · {role.name}',
-        'notifications': db.query(LeadRequest).filter(LeadRequest.status == 'Новая').count()
-                         + our_move,
+        # Заказы, где ход за нами, и новые заявки — только в разделах, доступных роли
+        'notifications': notifications.for_staff(db, can_view_requests, can_view_orders),
     }
 
 
@@ -93,6 +94,16 @@ def staff_requests(request: Request, db: Session = Depends(get_db),
         'roi_calcs': list(db.scalars(select(RoiCalculation).order_by(RoiCalculation.id.desc()).limit(10))),
     })
     return templates.TemplateResponse(request, 'staff/requests.html', ctx)
+
+
+@router.get('/profile')
+def staff_profile(request: Request, db: Session = Depends(get_db),
+                  user: User = Depends(require_role(ROLE_STAFF))):
+    role = own_role(db, user)
+    if role is None:
+        return RedirectResponse('/staff', status_code=303)
+    return templates.TemplateResponse(request, 'staff/profile.html',
+                                      context(request, db, user, role, 'profile'))
 
 
 def _order_guard(db: Session, user: User) -> StaffRole | None:
@@ -225,6 +236,28 @@ def change_stage(deal_id: int, decision: str = Form('next'), comment: str = Form
     if comment.strip():
         note += f' · {comment.strip()}'
     move_to(db, deal, target, log_title, note)
+    return RedirectResponse(f'/staff/orders/{deal_id}', status_code=303)
+
+
+@router.post('/orders/{deal_id}/training')
+def training_action(deal_id: int, action: str = Form(...), db: Session = Depends(get_db),
+                    user: User = Depends(require_role(ROLE_STAFF))):
+    """Учебный центр подтверждает запись клиента на курс, а после курса — выдаёт допуск."""
+    if _order_guard(db, user) is None:
+        return RedirectResponse('/staff', status_code=303)
+    deal = db.get(Deal, deal_id)
+    if deal is None or deal.training is None:
+        return RedirectResponse('/staff/orders', status_code=303)
+    t = deal.training
+    who = f'{user.full_name}, {role_name(db, user)}'
+    if action == 'schedule' and t.state == 'requested':
+        training_flow.schedule(t)
+        log(db, deal, 'Обучение подтверждено', f'{t.date_label}, {t.format.lower()} · {who}')
+    elif action == 'done' and t.state == 'scheduled':
+        training_flow.complete(t)
+        log(db, deal, 'Операторы допущены к работе',
+            f'{", ".join(t.operator_list) or f"{t.participants} чел."} · {who}')
+    db.commit()
     return RedirectResponse(f'/staff/orders/{deal_id}', status_code=303)
 
 

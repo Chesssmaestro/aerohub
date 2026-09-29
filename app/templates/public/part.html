@@ -2,20 +2,20 @@
 {% block title %}{{ part.name }} — запчасти АЭРОХАБ{% endblock %}
 
 {% block content %}
-<div class="pub-wrap" style="padding-bottom:50px;">
-  <div class="crumbs" style="margin:22px 0 18px;">
+<div class="pub-wrap page-body">
+  <div class="crumbs part-crumbs">
     <a href="/">Главная</a><span class="sep">›</span>
     <a href="/parts">Запчасти</a><span class="sep">›</span>
     <a href="/parts?group={{ part.group|urlencode }}">{{ part.group }}</a><span class="sep">›</span>
     <b>{{ part.article }}</b>
   </div>
 
-  <div class="part-hero">
+  <div class="part-hero" data-reveal>
     <div>
-      <div class="eyebrow">{{ part.group }} · {{ part.kind }}</div>
-      <h1 style="font-size:26px;font-weight:600;margin-top:12px;">{{ part.name }}</h1>
-      <div style="display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap;">
-        <span class="mono" style="color:var(--text-dim);font-size:12px;">Арт.: {{ part.article }}</span>
+      <div class="eyebrow">{{ part.group }}, {{ part.kind|lower }}</div>
+      <h1 class="part-title">{{ part.name }}</h1>
+      <div class="part-meta">
+        <span class="mono part-art">Арт.: {{ part.article }}</span>
         <span class="status-chip {{ 'ok' if part.in_stock else 'draft' }}">{{ part.stock }}</span>
       </div>
 
@@ -47,9 +47,9 @@
 
     <div>
       <div class="card solo">
-        <h4>Цена</h4>
-        <div class="del-progress">{{ part.price|money if part.price else 'по запросу' }}</div>
-        <div class="muted" style="margin-top:6px;">за штуку, с учётом НДС</div>
+        <h4>Стоимость</h4>
+        <div class="muted" style="margin-top:6px;">Цена по запросу — менеджер пришлёт КП
+          с актуальной ценой и сроком поставки.</div>
 
         {% if sent %}
         <div class="form-ok" style="margin-top:14px;">Запрос отправлен — менеджер свяжется с вами
@@ -59,12 +59,12 @@
         {% if user and user.role == 'client' %}
         <form method="post" action="/parts/{{ part.id }}/request" style="margin-top:16px;">
           <div class="f-row">
-            <label>Количество</label>
-            <input type="number" name="qty" value="1" min="1" max="999">
+            <label for="f-qty">Количество</label>
+            <input id="f-qty" type="number" name="qty" value="1" min="1" max="999">
           </div>
           <div class="f-row">
-            <label>Комментарий</label>
-            <textarea name="comment" placeholder="Серийный номер техники, срочность, самовывоз."></textarea>
+            <label for="f-comment">Комментарий</label>
+            <textarea id="f-comment" name="comment" placeholder="Серийный номер техники, срочность, самовывоз."></textarea>
           </div>
           <button class="btn btn-primary btn-block">Запросить КП по запчасти</button>
         </form>
@@ -87,13 +87,13 @@
         {% for s in similar %}
         <div class="doc-row">
           <a href="/parts/{{ s.id }}" style="max-width:70%;">{{ s.name[:60] }}{{ '…' if s.name|length > 60 }}</a>
-          <span class="doc-status dim">{{ s.price|money if s.price else '—' }}</span>
+          <span class="doc-status {{ 'ok' if s.in_stock else 'dim' }}">{{ s.stock }}</span>
         </div>
         {% else %}
         <p class="empty">Похожих позиций нет.</p>
         {% endfor %}
         <a href="/parts?group={{ part.group|urlencode }}" class="link-accent" style="margin-top:12px;">
-          Весь узел «{{ part.group }}» →</a>
+          Весь узел «{{ part.group }}»</a>
       </div>
     </div>
   </div>

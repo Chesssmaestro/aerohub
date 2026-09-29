@@ -10,7 +10,7 @@
   <div class="card solo">
     <h4>График платежей</h4>
     <div class="pay-bar"><i style="width:{{ stats.paid_share }}%"></i></div>
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;font-size:var(--fs-label);color:var(--text-muted);margin-bottom:14px;">
       <span>{{ stats.paid_share }}% оплачено</span><span>{{ stats.rest_share }}% ожидает</span>
     </div>
     {% for p in deal.payments %}
@@ -35,7 +35,7 @@
       <div class="doc-row"><span>{{ d.title }}</span><span class="doc-status {{ d.status_tone }}">{{ d.status }}</span></div>
       <div class="muted-sm">{{ d.date_label }} · {{ d.kind }} · {{ d.size_label }}</div>
       {% endfor %}
-      <a href="/cabinet/docs" class="link-accent" style="margin-top:12px;">Открыть документы →</a>
+      <a href="/cabinet/docs" class="link-accent" style="margin-top:12px;">Открыть документы</a>
     </div>
     <div class="card solo" style="margin-top:22px;">
       <h4>Что блокирует отгрузку</h4>

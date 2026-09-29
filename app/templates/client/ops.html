@@ -67,7 +67,7 @@
     {% if last %}
     <div class="card solo" style="margin-top:22px;">
       <h4>Последняя операция</h4>
-      <div style="font-family:'Unbounded';font-size:16px;">{{ last.field }}</div>
+      <div style="font-family:var(--font-brand);font-size:var(--fs-body);">{{ last.field }}</div>
       <div class="muted" style="margin-top:4px;">{{ last.crop }} · {{ last.area|number }} {{ last.unit }}</div>
       <div class="doc-row" style="margin-top:10px;"><span>Дата</span><span class="doc-status dim">{{ last.date_label }}.2026</span></div>
       <div class="doc-row"><span>Статус</span><span class="doc-status blue">{{ last.status }}</span></div>

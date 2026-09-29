@@ -1,50 +1,143 @@
 {% extends 'client/_base.html' %}
 
 {% block section %}
-{% set training = deal.training %}
+{% set t = deal.training %}
+{% set state = t.state if t else 'not_planned' %}
 <div class="page-head">
   <h1>Обучение операторов</h1>
-  <p>Аттестация операторов обязательна до ввода техники в эксплуатацию (DEL-460).
-     Результат фиксируется в цифровом паспорте техники.</p>
+  <p>Без допуска оператор не работает на технике — так требует регламент учебного центра.
+     Запишите операторов заранее: курс идёт два дня, результат попадает в цифровой паспорт техники.</p>
 </div>
 
-<div class="col-1-2">
-  <div class="card solo">
-    <h4>Курс операторов</h4>
-    <div class="doc-row"><span>Дата</span><span class="doc-status">{{ training.date_label }}</span></div>
-    <div class="doc-row"><span>Участники</span><span class="doc-status">{{ training.participants }} человека</span></div>
-    <div class="doc-row"><span>Статус</span>
-      <span class="doc-status {{ 'ok' if training.confirmed else 'warn' }}">
-        {{ 'Подтверждено' if training.confirmed else 'Ожидает подтверждения' }}</span></div>
-    {% if training.confirmed %}
-      <div class="form-ok" style="margin-top:14px;">
-        Дата подтверждена {{ training.confirmed_at|ru_date }}. Начальник АУЦ свяжется с вами по программе курса.
-      </div>
-    {% else %}
-      <form action="/cabinet/training/confirm" method="post" style="margin-top:14px;">
-        <button class="btn btn-primary btn-block">Подтвердить дату обучения</button>
+<ol class="train-steps" aria-label="Этапы обучения">
+  {% for key, title, note in train_steps %}
+  <li class="{{ 'done' if loop.index <= train_step }}{{ ' current' if loop.index == train_step + 1 }}">
+    <b>{{ title }}</b><span>{{ note }}</span>
+  </li>
+  {% endfor %}
+</ol>
+
+<div class="col-2-1">
+  <div class="card solo train-card">
+    {% if state == 'not_planned' %}
+      <h4>Запись на курс</h4>
+      {% if error %}<div class="form-error">Выберите поток, формат и впишите хотя бы одного оператора.</div>{% endif %}
+      <form method="post" action="/cabinet/training/book">
+        <fieldset class="f-row">
+          <legend>Поток</legend>
+          <div class="choice-grid">
+            {% for s in slots %}
+            <label class="choice">
+              <input type="radio" name="slot" value="{{ s.key }}" {{ 'checked' if loop.first }} required>
+              <span><b>{{ s.label }}</b><small>вторник и среда</small></span>
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <fieldset class="f-row">
+          <legend>Где проходить</legend>
+          <div class="choice-list">
+            {% for f in formats %}
+            <label class="choice">
+              <input type="radio" name="format" value="{{ f.key }}" {{ 'checked' if loop.first }} required>
+              <span><b>{{ f.name }}</b><small>{{ f.note }}</small></span>
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <fieldset class="f-row">
+          <legend>Операторы</legend>
+          <div class="operator-list" id="operator-list">
+            <input type="text" name="operator" placeholder="Имя и фамилия" autocomplete="off" required aria-label="Оператор 1">
+            <input type="text" name="operator" placeholder="Имя и фамилия" autocomplete="off" aria-label="Оператор 2">
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="add-operator" data-max="{{ max_operators }}">Добавить оператора</button>
+          <div class="f-note">Обычно двое на одну машину: пилот и помощник. До {{ max_operators }} человек в группе.</div>
+        </fieldset>
+
+        <div class="f-row">
+          <label for="t-note">Комментарий</label>
+          <textarea id="t-note" name="note" placeholder="Опыт операторов, удобное время, адрес поля для выезда." style="min-height:80px;"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Записать операторов</button>
+        <p class="demo-note">Запись увидит учебный центр и {{ deal.specialist_name or 'ваш менеджер' }}.
+          Дату подтвердят в течение рабочего дня.</p>
       </form>
+
+    {% else %}
+      <h4>
+        {{ {'requested': 'Запись отправлена', 'scheduled': 'Курс подтверждён', 'done': 'Операторы допущены'}[state] }}
+        <span class="status-chip {{ 'ok' if state in ('scheduled', 'done') else 'accent' }}">
+          {{ {'requested': 'ждёт подтверждения', 'scheduled': 'подтверждено', 'done': 'пройдено'}[state] }}</span>
+      </h4>
+      {% if sent and state == 'requested' %}
+      <div class="form-ok">Готово — операторы записаны. Учебный центр подтвердит дату в течение рабочего дня.</div>
+      {% endif %}
+      <div class="doc-row"><span>Даты</span><span class="doc-status">{{ t.date_label }}</span></div>
+      {% if t.format %}<div class="doc-row"><span>Место</span><span class="doc-status">{{ t.format }}</span></div>{% endif %}
+      <div class="doc-row"><span>Операторы</span>
+        <span class="doc-status">{% for n in t.operator_list %}{{ n }}{% if not loop.last %}<br>{% endif %}{% else %}{{ t.participants }} чел.{% endfor %}</span></div>
+      {% if t.confirmed_at %}<div class="doc-row"><span>Подтверждено</span><span class="doc-status">{{ t.confirmed_at|ru_date }}</span></div>{% endif %}
+      {% if t.done_at %}<div class="doc-row"><span>Допуск выдан</span><span class="doc-status">{{ t.done_at|ru_date }}</span></div>{% endif %}
+
+      {% if state == 'requested' %}
+      <form method="post" action="/cabinet/training/change" style="margin-top:16px;">
+        <button class="btn btn-ghost btn-block">Изменить запись</button>
+      </form>
+      {% elif state == 'scheduled' %}
+      <div class="bring-list">
+        <b>Что взять с собой</b>
+        <ul class="rule-list">
+          <li>Удостоверение личности каждого оператора.</li>
+          <li>Для выезда на поле — заряженные аккумуляторы и карту полей хозяйства.</li>
+          <li>Удобную одежду для работы на полигоне.</li>
+        </ul>
+      </div>
+      {% elif state == 'done' %}
+      <p class="muted" style="margin-top:14px;">Результат аттестации внесён в цифровой паспорт техники —
+        можно начинать обработки.</p>
+      <a href="/cabinet/ops" class="btn btn-outline btn-block" style="margin-top:14px;">Перейти к обработкам</a>
+      {% endif %}
     {% endif %}
   </div>
 
   <div>
     <section class="block" style="margin-top:0;">
-      <div class="block-head"><h2>Программа</h2><span class="block-note">два дня, теория и практика</span></div>
+      <div class="block-head"><h2>Программа курса</h2><span class="block-note">два дня, теория и практика</span></div>
       <div class="task-list">
         <div class="task-item"><div class="task-date">День 1</div>
-          <div class="task-body"><b>Теория и регламенты</b><span>Устройство платформы, режимы полёта, нормы вылива, безопасность, ограничения воздушного пространства.</span></div></div>
+          <div class="task-body"><b>Теория и регламенты</b><span>Устройство {{ deal.product }}, режимы полёта, нормы вылива, безопасность, ограничения воздушного пространства.</span></div></div>
         <div class="task-item"><div class="task-date">День 2</div>
-          <div class="task-body"><b>Практика и допуск</b><span>Построение маршрута по карте поля, калибровка, работа с RTK, отработка сценариев, аттестация операторов.</span></div></div>
+          <div class="task-body"><b>Практика и допуск</b><span>Маршрут по карте поля, калибровка, работа с RTK, отработка сценариев, аттестация.</span></div></div>
         <div class="task-item"><div class="task-date">После</div>
-          <div class="task-body"><b>Ввод в эксплуатацию</b><span>Фиксация результата в цифровом паспорте и старт истории обработок.</span></div></div>
+          <div class="task-body"><b>Ввод в эксплуатацию</b><span>Допуск вносится в цифровой паспорт, в кабинете открывается история обработок.</span></div></div>
       </div>
     </section>
 
     <div class="oq-box draft" style="margin-top:26px;">
-      <h3>◆ Важно</h3>
-      <p>Необученный оператор не допускается к практической работе. Если состав операторов
-         изменился — сообщите специалисту до начала курса.</p>
+      <h3>Если сменился оператор</h3>
+      <p>Новый оператор проходит курс заново — без допуска он не работает на технике.
+        Напишите <a href="/cabinet/specialist" class="link-accent">менеджеру</a>, и его добавят в ближайший поток.</p>
     </div>
   </div>
 </div>
+
+<script>
+  (() => {
+    const btn = document.getElementById('add-operator');
+    const list = document.getElementById('operator-list');
+    if (!btn || !list) return;
+    btn.addEventListener('click', () => {
+      const count = list.querySelectorAll('input').length;
+      if (count >= +btn.dataset.max) return;
+      const input = document.createElement('input');
+      input.type = 'text'; input.name = 'operator'; input.placeholder = 'Имя и фамилия';
+      input.autocomplete = 'off'; input.setAttribute('aria-label', 'Оператор ' + (count + 1));
+      list.appendChild(input); input.focus();
+      if (count + 1 >= +btn.dataset.max) btn.hidden = true;
+    });
+  })();
+</script>
 {% endblock %}

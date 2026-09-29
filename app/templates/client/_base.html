@@ -18,9 +18,9 @@
 {% include 'partials/org_head.html' %}
 
 {% for d in awaiting or [] %}
-<div class="draft-banner" style="background:rgba(255,106,26,0.08);border-color:var(--accent-dim);color:var(--accent);">
+<div class="draft-banner" style="background:rgba(255,106,26,0.10);border-color:var(--accent-dim);color:var(--accent);">
   ● Заказ №{{ d.number }} ждёт вас: оплатите счёт и приложите чек.
-  <a href="/cabinet/orders/{{ d.id }}" class="link-accent" style="margin-left:auto;">Открыть заказ →</a>
+  <a href="/cabinet/orders/{{ d.id }}" class="link-accent" style="margin-left:auto;">Открыть заказ</a>
 </div>
 {% endfor %}
 

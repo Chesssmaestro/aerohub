@@ -1,5 +1,5 @@
 @echo off
-rem Запуск портала AEROHUB на http://127.0.0.1:8000
+rem Запуск портала АЭРОХАБ на http://127.0.0.1:8000
 cd /d "%~dp0"
 if not exist ".venv\Scripts\python.exe" (
   echo Создаю виртуальное окружение...

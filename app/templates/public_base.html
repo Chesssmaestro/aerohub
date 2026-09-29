@@ -4,10 +4,6 @@
 <nav class="pubnav">
   <a href="/" class="brand">
     {% include 'partials/logo.html' %}
-    <span style="display:flex;flex-direction:column;line-height:1.15;">
-      <b>АЭРОХАБ</b>
-      <span>Agriculture</span>
-    </span>
   </a>
   <button class="nav-burger" id="nav-toggle" type="button" aria-label="Меню" aria-expanded="false">
     <span></span><span></span><span></span>
@@ -26,6 +22,7 @@
     <li class="only-mobile"><a href="/contacts">Контакты</a></li>
   </ul>
   <div class="pubnav-right">
+    {% include 'partials/theme_toggle.html' %}
     {% if user %}
       <a href="{{ user.home_url }}" class="btn btn-outline btn-sm">Личный кабинет</a>
     {% else %}
@@ -42,7 +39,6 @@
       <div>
         <a href="/" class="brand" style="margin-bottom:14px;">
           {% include 'partials/logo.html' %}
-          <b>АЭРОХАБ</b>
         </a>
         <p>Поставка, сервис и сопровождение агродронов DJI Agras.<br>
            Единый кабинет сделки, поставки, обучения и эксплуатации.</p>

@@ -9,7 +9,7 @@
     <h1>Поставка {{ deal.product }}</h1>
     <span class="status-chip accent">{{ delivery.status }}</span>
   </div>
-  <p>{{ delivery.origin }} → {{ delivery.destination }} · прибытие {{ delivery.eta_label }} ·
+  <p>{{ delivery.origin }} — {{ delivery.destination }} · прибытие {{ delivery.eta_label }} ·
      прогресс {{ delivery.progress }}%</p>
 </div>
 
@@ -19,9 +19,9 @@
       <div class="route-head">
         <div class="rh-label">Маршрут поставки</div>
         <div style="display:flex;gap:28px;">
-          <div><div class="rh-label">Текущий статус</div><b style="color:var(--blue);font-size:13px;">{{ delivery.status }}</b></div>
-          <div><div class="rh-label">Прогресс</div><b style="color:var(--accent);font-size:15px;font-family:'Unbounded';">{{ delivery.progress }}%</b></div>
-          <div><div class="rh-label">Плановое прибытие</div><b style="color:var(--blue);font-size:15px;font-family:'Unbounded';">{{ delivery.eta_label }}</b></div>
+          <div><div class="rh-label">Текущий статус</div><b style="color:var(--blue);font-size:var(--fs-xs);">{{ delivery.status }}</b></div>
+          <div><div class="rh-label">Прогресс</div><b style="color:var(--accent);font-size:var(--fs-body);font-family:var(--font-brand);">{{ delivery.progress }}%</b></div>
+          <div><div class="rh-label">Плановое прибытие</div><b style="color:var(--blue);font-size:var(--fs-body);font-family:var(--font-brand);">{{ delivery.eta_label }}</b></div>
         </div>
       </div>
 
@@ -78,7 +78,7 @@
         <span class="doc-status {{ '' if p.paid else 'warn' }}">{{ p.status|upper }}</span>
       </div>
       {% endfor %}
-      <a href="/cabinet/payment" class="link-accent" style="margin-top:12px;">Открыть детали оплаты →</a>
+      <a href="/cabinet/payment" class="link-accent" style="margin-top:12px;">Открыть детали оплаты</a>
     </div>
 
     <div class="card solo" style="margin-top:22px;">
@@ -109,7 +109,7 @@
       {% for a in deal.accounting %}
       <div class="doc-row"><span>{{ a.title }}</span><span class="doc-status">{{ a.status }}</span></div>
       {% endfor %}
-      <a href="/cabinet/accounting" class="link-accent" style="margin-top:12px;">Подробнее →</a>
+      <a href="/cabinet/accounting" class="link-accent" style="margin-top:12px;">Подробнее</a>
     </div>
   </div>
 </div>

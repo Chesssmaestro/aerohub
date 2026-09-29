@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 aerohub.db
+aerohub.db
 media/
 .DS_Store
 .idea/

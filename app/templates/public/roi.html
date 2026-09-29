@@ -5,7 +5,6 @@
 <div class="pub-wrap">
   <div class="roi-top">
     <div>
-      <div class="eyebrow">ROI / экономика эксплуатации</div>
       <h1 id="roi-title">Экономика эксплуатации DJI T100</h1>
     </div>
     <div class="roi-desc">
@@ -14,13 +13,13 @@
       пригодную для предварительного коммерческого обсуждения.
     </div>
     <div class="roi-actions">
-      <button type="button" class="btn btn-primary" id="roi-save">Рассчитать под своё хозяйство →</button>
+      <button type="button" class="btn btn-primary" id="roi-save">Рассчитать под своё хозяйство</button>
       <a href="/kp" class="btn btn-ghost">Получить КП</a>
-      <div class="muted-sm" id="roi-save-note"></div>
+      <div class="muted-sm" id="roi-save-note" aria-live="polite"></div>
     </div>
   </div>
 
-  <div class="roi-grid">
+  <div class="roi-grid roi-calc" data-reveal>
     <!-- ===== параметры ===== -->
     <div class="roi-params">
       <div class="roi-panel-title">Параметры хозяйства</div>
@@ -39,7 +38,7 @@
           {% for m in models %}
           <option value="{{ m.key }}" data-price="{{ m.price }}" data-perf="{{ m.perf }}"
                   data-name="{{ m.name }}" {{ 'selected' if m.key == 't100' }}>
-            {{ m.name }} · {{ m.price|money }}
+            {{ m.name }} — {{ m.price|money }}
           </option>
           {% endfor %}
         </select>
@@ -111,9 +110,9 @@
           {% endwith %}
         </div>
         <div>
-          <b style="font-size:13.5px;" id="unit-name">DJI T100</b>
+          <b class="unit-name" id="unit-name">DJI T100</b>
           <div class="muted-sm">Платформа для обработки, внесения гранул и погрузки.</div>
-          <a href="/configurator" class="link-accent" style="margin-top:8px;">Подробнее о платформе →</a>
+          <a href="/configurator" class="link-accent" style="margin-top:8px;">Подробнее о платформе</a>
         </div>
       </div>
     </div>
@@ -146,7 +145,7 @@
 
       <div class="chart-box">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
-          <b style="font-size:13px;">Денежный поток · 24 месяца</b>
+          <b class="chart-title">Денежный поток · 24 месяца</b>
           <div class="chart-legend">
             <span><i></i>Денежный поток</span>
             <span><i class="dash"></i>Точка окупаемости</span>
@@ -167,5 +166,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/roi.js"></script>
+<script src="{{ static('js/roi.js') }}"></script>
 {% endblock %}

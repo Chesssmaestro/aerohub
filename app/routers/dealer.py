@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import notifications
 from ..db import get_db
 from ..models import ROLE_DEALER, DealerOrder, Lead, User
 from ..security import require_role
@@ -16,6 +17,7 @@ NAV = [
     ('clients', 'Мои клиенты'),
     ('pricing', 'Цены и матрица'),
     ('materials', 'Материалы и обучение'),
+    ('profile', 'Профиль'),
 ]
 NAV_TITLES = dict(NAV)
 
@@ -35,10 +37,10 @@ def context(request: Request, db: Session, user: User, section: str) -> dict:
     return {
         'request': request, 'user': user, 'nav': NAV, 'active': section,
         'crumb': NAV_TITLES.get(section, ''), 'orders': orders, 'leads': leads, 'levels': LEVELS,
-        'org_name': user.company.name if user.company else user.full_name,
-        'org_sub': f'{user.full_name} · поставщик с {ru_month_year(user.created_at)}',
+        'org_name': user.org_name,
+        'org_sub': f'{user.full_name} · дилер с {ru_month_year(user.created_at)}',
         'level': user.company.dealer_level if user.company else 'Silver',
-        'notifications': len([o for o in orders if o.status == 'Новая заявка']),
+        'notifications': notifications.for_dealer(orders),
     }
 
 

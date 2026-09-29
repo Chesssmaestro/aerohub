@@ -8,7 +8,7 @@
   <div class="head-row">
     <h1>Заказ №{{ deal.number }}</h1>
     <span class="status-chip {{ 'accent' if stage_key != 'done' else 'ok' }}">{{ stage.title }}</span>
-    <a href="/cabinet/orders" class="link-accent">← ко всем заказам</a>
+    <a href="/cabinet/orders" class="link-accent">ко всем заказам</a>
   </div>
   <p>{{ deal.product }} «{{ deal.package }}» · {{ deal.amount|money }} ·
      оформлен {{ deal.created_at|ru_date }}</p>
@@ -31,7 +31,7 @@
   <div>
     <div class="card solo" style="border-left:2px solid var(--accent);">
       <h4>Этап {{ stage.number }} из {{ stage.total }} <span class="mono" style="color:var(--accent);">№{{ deal.number }}</span></h4>
-      <div style="font-family:'Unbounded';font-size:17px;">{{ stage.title }}</div>
+      <div style="font-family:var(--font-brand);font-size:var(--fs-lead);">{{ stage.title }}</div>
       <p class="muted-sm" style="margin-top:8px;">{{ stage.client }}</p>
 
       {% if can_upload_receipt %}
@@ -40,12 +40,12 @@
         <input type="hidden" name="doc_type" value="receipt">
         <div class="f-two">
           <div class="f-row">
-            <label>Чек / платёжное поручение</label>
-            <input type="file" name="file" required>
+            <label for="f-file">Чек / платёжное поручение</label>
+            <input id="f-file" type="file" name="file" required>
           </div>
           <div class="f-row">
-            <label>Название (необязательно)</label>
-            <input type="text" name="title" placeholder="Чек об оплате счёта">
+            <label for="f-title">Название (необязательно)</label>
+            <input id="f-title" type="text" name="title" placeholder="Чек об оплате счёта">
           </div>
         </div>
         <button class="btn btn-primary">Приложить чек об оплате</button>

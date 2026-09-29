@@ -1,0 +1,14 @@
+{# Контур поля и «змейка» маршрута опрыскивания. Декор: aria-hidden.
+   route_id — уникальный id маски на странице. #}
+{% set rid = route_id | default('route-reveal') %}
+{% set d = 'M90 100H560A30 30 0 0 1 560 160H90A30 30 0 0 0 90 220H560A30 30 0 0 1 560 280H90A30 30 0 0 0 90 340H560A30 30 0 0 1 560 400H90A30 30 0 0 0 90 460H560' %}
+<svg class="field-route" viewBox="0 0 640 520" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+  <defs>
+    <mask id="{{ rid }}" maskUnits="userSpaceOnUse">
+      <path class="route-draw" pathLength="1" d="{{ d }}" fill="none" stroke="#fff" stroke-width="6"/>
+    </mask>
+  </defs>
+  <path class="field-edge" d="M58 68L592 42L612 474L40 492Z" fill="none"/>
+  <path class="route-line" mask="url(#{{ rid }})" d="{{ d }}" fill="none"/>
+  <rect class="route-start" x="85" y="95" width="10" height="10"/>
+</svg>

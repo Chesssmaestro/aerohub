@@ -14,12 +14,11 @@
 <div class="pub-wrap">
   <div class="roi-top">
     <div>
-      <div class="eyebrow">Каталог · запчасти</div>
       <h1>Запчасти DJI Agras</h1>
     </div>
     <div class="roi-desc">
       {{ catalog_size|number }} позиций по всем платформам — от крепежа и уплотнений до насосов,
-      плат и лучей. Наличие и цена обновляются из складского учёта; отгрузка со склада в день заказа.
+      плат и лучей. Наличие обновляется из складского учёта; отгрузка со склада в день заказа.
     </div>
     <div class="roi-actions">
       <a href="/configurator" class="btn btn-ghost">Конфигуратор техники</a>
@@ -27,14 +26,14 @@
     </div>
   </div>
 
-  <div class="roi-grid">
+  <div class="roi-grid roi-catalog" data-reveal>
     <aside class="roi-params">
       <form method="get" action="/parts">
         <div class="param">
           <label>Поиск по названию или артикулу</label>
           <div class="stepper">
-            <input type="text" name="q" value="{{ q }}" placeholder="насос, YC.JG…">
-            <button type="submit" title="Найти">→</button>
+            <input type="search" name="q" value="{{ q }}" placeholder="насос, YC.JG…" aria-label="Поиск по названию или артикулу">
+            <button type="submit" title="Найти" aria-label="Найти"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.7"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
           </div>
         </div>
         <input type="hidden" name="model" value="{{ model }}">
@@ -115,15 +114,15 @@
             {% if p.model_list|length > 5 %}<span class="chip">+{{ p.model_list|length - 5 }}</span>{% endif %}
           </div>
           <div class="pc-bottom">
-            <span class="pc-price">{{ p.price|money if p.price else 'по запросу' }}</span>
-            <span class="link-accent">Подробнее →</span>
+            <span class="muted-sm">Цена по запросу</span>
+            <span class="link-accent">Подробнее</span>
           </div>
         </a>
         {% endfor %}
       </div>
 
       <div class="pager">
-        {% if page > 1 %}<a class="btn btn-ghost btn-sm" href="/parts{{ qs(page=page-1) }}">← назад</a>{% endif %}
+        {% if page > 1 %}<a class="btn btn-ghost btn-sm" href="/parts{{ qs(page=page-1) }}">назад</a>{% endif %}
         {% for p in range(1, pages + 1) %}
           {% if p <= 2 or p > pages - 2 or (p >= page - 1 and p <= page + 1) %}
             <a class="btn btn-sm {{ 'btn-outline' if p == page else 'btn-ghost' }}"
@@ -132,7 +131,7 @@
             <span class="muted">…</span>
           {% endif %}
         {% endfor %}
-        {% if page < pages %}<a class="btn btn-ghost btn-sm" href="/parts{{ qs(page=page+1) }}">вперёд →</a>{% endif %}
+        {% if page < pages %}<a class="btn btn-ghost btn-sm" href="/parts{{ qs(page=page+1) }}">вперёд</a>{% endif %}
       </div>
       {% else %}
       <p class="empty">Ничего не найдено. Измените фильтры или пришлите артикул — подберём вручную.</p>

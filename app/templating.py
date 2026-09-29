@@ -50,3 +50,15 @@ templates.env.filters['ru_date'] = ru_date
 templates.env.filters['number'] = number
 templates.env.filters['mln'] = mln
 templates.env.globals['company'] = COMPANY
+
+
+def static_url(path: str) -> str:
+    """/static/css/app.css?v=<mtime> — чтобы браузер не держал старую версию после правок."""
+    try:
+        version = int((BASE_DIR / 'app' / 'static' / path).stat().st_mtime)
+    except OSError:
+        return f'/static/{path}'
+    return f'/static/{path}?v={version}'
+
+
+templates.env.globals['static'] = static_url

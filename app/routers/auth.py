@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from .. import kp_flow
 from ..config import STAFF_CODE
 from ..db import get_db
 from ..models import ROLE_CLIENT, ROLE_DEALER, ROLE_HOME, ROLE_STAFF, Company, StaffRole, User
@@ -21,7 +22,7 @@ PORTALS = [
     },
     {
         'key': ROLE_DEALER,
-        'title': 'Кабинет поставщика',
+        'title': 'Кабинет дилера',
         'text': 'Оптовые заявки, цены и маржа, ваши клиенты, обучение и маркетинговые материалы.',
         'icon': '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6" stroke="currentColor" stroke-width="1.6"/>',
     },
@@ -78,7 +79,9 @@ def login_submit(request: Request, email: str = Form(...), password: str = Form(
         }, status_code=400)
 
     login_user(request, user)
-    target = next if next.startswith('/') else ROLE_HOME.get(user.role, '/')
+    # Если перед входом была заполнена заявка на КП — оформляем её и ведём в кабинет
+    target = (kp_flow.finish_draft(request, db, user)
+              or (next if next.startswith('/') else ROLE_HOME.get(user.role, '/')))
     return RedirectResponse(target, status_code=303)
 
 
@@ -145,9 +148,13 @@ def register_submit(
             return fail('Выберите должность.')
         role_key = role.key
     else:
-        if not company_name.strip():
+        name = company_name.strip()
+        if name.lower() in ('none', '-', '—'):
+            name = ''
+        if not name and portal == ROLE_DEALER:
             return fail('Укажите название организации.')
-        company = Company(name=company_name.strip(), inn=inn.strip(), city=city.strip(),
+        # Покупатель может быть частным лицом — тогда «организация» называется его именем
+        company = Company(name=name or full_name.strip(), inn=inn.strip(), city=city.strip(),
                           kind=portal, dealer_level='Silver' if portal == ROLE_DEALER else '')
         db.add(company)
         db.flush()
@@ -159,7 +166,8 @@ def register_submit(
     db.commit()
 
     login_user(request, user)
-    return RedirectResponse(ROLE_HOME[portal], status_code=303)
+    target = kp_flow.finish_draft(request, db, user) or ROLE_HOME[portal]
+    return RedirectResponse(target, status_code=303)
 
 
 @router.post('/logout')

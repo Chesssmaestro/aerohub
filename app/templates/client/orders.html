@@ -11,6 +11,32 @@
 <div class="form-ok">Заказ оформлен и передан менеджеру. Первый контакт — в течение 30 минут
   в рабочее время.</div>
 {% endif %}
+{% if kp_sent %}
+<div class="form-ok">Заявка на КП отправлена менеджеру. Первый контакт — в течение 30 минут
+  в рабочее время; готовое КП появится здесь.</div>
+{% endif %}
+
+{% if kp_requests %}
+<section class="block" style="margin-top:0;margin-bottom:var(--sp-6);">
+  <div class="block-head"><h2>Запросы КП и обращения</h2><span class="block-note">{{ kp_requests|length }}</span></div>
+  <div class="table-wrap">
+    <table class="proc-table">
+      <thead><tr><th>Дата</th><th>Тип</th><th>Хозяйство и площадь</th><th>Задача</th><th>Статус</th></tr></thead>
+      <tbody>
+        {% for r in kp_requests %}
+        <tr>
+          <td class="proc-code">{{ r.created_at|ru_date }}</td>
+          <td class="proc-name">{{ r.source }}</td>
+          <td class="proc-kpi">{{ r.farm or '—' }}{% if r.area %}<br>{{ r.area }} га{% endif %}</td>
+          <td class="proc-kpi">{{ r.comment or '—' }}</td>
+          <td><span class="status-chip {{ 'accent' if r.status == 'Новая' else 'ok' }}">{{ 'Передана менеджеру' if r.status == 'Новая' else r.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
 
 <div class="col-2-1">
   <div>
@@ -37,10 +63,10 @@
     </div>
 
     <div class="oq-box draft" style="margin-top:26px;">
-      <h3>◆ Как проходит заказ</h3>
-      <p>Заявка → менеджер согласовывает состав и цену → выставляет счёт-фактуру (появится
-         в карточке заказа) → вы оплачиваете и прикладываете чек → менеджер подтверждает оплату →
-         отгрузка и закрытие заказа. Каждый шаг виден в карточке заказа и в истории.</p>
+      <h3>Как проходит заказ</h3>
+      <p>Менеджер согласует с вами состав и цену и выставит счёт-фактуру — он появится
+         в карточке заказа. Вы оплачиваете и прикладываете чек, менеджер подтверждает оплату,
+         затем отгрузка и закрытие заказа. Каждый шаг виден в карточке заказа и в истории.</p>
     </div>
   </div>
 
@@ -48,19 +74,19 @@
     <h4>Оформить заказ</h4>
     <form method="post" action="/cabinet/orders">
       <div class="f-row">
-        <label>Платформа</label>
-        <select name="model">
+        <label for="f-model">Платформа</label>
+        <select id="f-model" name="model">
           {% for m in models %}
-          <option value="{{ m.key }}" {{ 'selected' if m.key == 't100' }}>{{ m.name }} — {{ m.price|money }}</option>
+          <option value="{{ m.key }}" {{ 'selected' if m.key == 't100' }}>{{ m.name }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="f-row">
-        <label>Пакет</label>
-        <select name="package">
+        <label for="f-package">Пакет</label>
+        <select id="f-package" name="package">
           {% for p in packages %}
           <option value="{{ p.key }}" {{ 'selected' if p.key == 'pro' }}>
-            {{ p.name }}{% if p.extra %} · +{{ p.extra|money }}{% endif %}
+            {{ p.name }}
           </option>
           {% endfor %}
         </select>
@@ -71,17 +97,16 @@
         <label class="opt-row" style="cursor:pointer;padding:8px 0;">
           <input type="checkbox" name="options" value="{{ o.key }}" style="accent-color:#FF6A1A;">
           <span class="opt-main"><b>{{ o.name }}</b><span>{{ o.note }}</span></span>
-          <span class="opt-price">{{ o.price|money }}</span>
         </label>
         {% endfor %}
       </div>
       <div class="f-row">
-        <label>Город поставки</label>
-        <input type="text" name="city" value="{{ user.company.city if user.company else '' }}" placeholder="Самара">
+        <label for="f-city">Город поставки</label>
+        <input id="f-city" type="text" name="city" value="{{ user.company.city if user.company else '' }}" placeholder="Самара">
       </div>
       <div class="f-row">
-        <label>Комментарий</label>
-        <textarea name="comment" placeholder="Площадь, культуры, желаемый срок поставки."></textarea>
+        <label for="f-comment">Комментарий</label>
+        <textarea id="f-comment" name="comment" placeholder="Площадь, культуры, желаемый срок поставки."></textarea>
       </div>
       <button class="btn btn-primary btn-block">Оформить заказ</button>
     </form>

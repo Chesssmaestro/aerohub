@@ -1,22 +1,14 @@
-"""Демо-данные портала.
-
-Справочник должностей перенесён из MVP (aerohub-portal.html, объект ROLES),
-данные сделки клиента — с эталонных экранов кабинета.
-"""
+"""Начальное наполнение базы: реестр должностей, администратор, каталог запчастей."""
 
 import json
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .config import BASE_DIR, DEMO_PASSWORD
+from .config import ADMIN_EMAIL, ADMIN_PASSWORD, BASE_DIR
 from .db import Base, SessionLocal, engine
-from .orders import STAGES as ORDER_STAGES
 from .models import (
-    AccountingItem, Company, ConfigItem, Deal, DealStage, DealerOrder, Delivery, Document,
-    Lead, Operation, Part, Payment, Request, ServiceTicket, StaffKpi, StaffProcess, StaffRole,
-    StaffRule, StaffTask, TimelineEvent, Training, User,
-    ROLE_CLIENT, ROLE_DEALER, ROLE_STAFF,
+    Part, StaffKpi, StaffProcess, StaffRole, StaffRule, StaffTask, User, ROLE_STAFF,
 )
 from .security import hash_password
 
@@ -486,167 +478,10 @@ def seed_staff_roles(db: Session) -> None:
             db.add(StaffTask(role_id=role.id, date_label=date_label, title=title, note=note))
 
 
-def build_demo_deal(db: Session, company: Company) -> Deal:
-    """Сделка DJI T100 с эталонных экранов кабинета клиента."""
-    deal = Deal(
-        company_id=company.id, number='77', product='DJI T100', package='Профессиональная',
-        amount=6_850_000, stage=6, source='Менеджер',
-        specialist_name='Алексей Смирнов', specialist_role='Инженер внедрения',
-        specialist_phone='+7 999 123-45-67', specialist_email='a.smirnov@aerohub.example',
-    )
-    db.add(deal)
-    db.flush()
-
-    # Демо-сделка стоит на этапе поставки: всё до неё пройдено
-    stages = [
-        ('05.07.2026', 'Принята'),
-        ('07.07.2026', 'Состав согласован'),
-        ('08.08.2026', 'Счёт №318'),
-        ('12.08.2026', 'Чек получен'),
-        ('12.08.2026', 'Оплата подтверждена'),
-        ('22.09.2026', 'Текущий этап'),
-        ('', 'Ожидает'),
-    ]
-    current = 5
-    for i, stage in enumerate(ORDER_STAGES):
-        date_label, note = stages[i]
-        db.add(DealStage(deal_id=deal.id, position=i, title=stage['title'], date_label=date_label,
-                         note=note,
-                         status='done' if i < current else ('current' if i == current else 'pending')))
-
-    deal_events = [
-        ('05.07', 'Заявка принята', 'Обращение зарегистрировано в CRM.'),
-        ('07.07', 'КП согласовано', 'КП №1042 подтверждено.'),
-        ('08.08', 'Счёт выставлен', 'Счёт №318, схема оплаты 30/70.'),
-        ('12.08', 'Договор подписан', 'Договор №77.'),
-        ('след. шаг', 'Подтвердите дату обучения', '25–26 сентября, 2 участника.'),
-    ]
-    for i, (date_label, title, note) in enumerate(deal_events):
-        db.add(TimelineEvent(deal_id=deal.id, position=i, date_label=date_label, title=title,
-                             note=note, kind='deal',
-                             status='done' if i < len(deal_events) - 1 else 'current'))
-
-    delivery_events = [
-        ('12.08', 'Платёж 30% подтверждён', '', 'done'),
-        ('12.08', 'Документы — Договор №77 подписан', '', 'done'),
-        ('12.08', 'Поставка — статус: в пути', '', 'current'),
-        ('13.09', 'Учёт — документы приняты', '', 'done'),
-        ('13.09', 'ЭПР — заявка подана', '', 'done'),
-    ]
-    for i, (date_label, title, note, status) in enumerate(delivery_events):
-        db.add(TimelineEvent(deal_id=deal.id, position=i, date_label=date_label, title=title,
-                             note=note, kind='delivery', status=status))
-
-    documents = [
-        ('КП №1042', 'PDF', 'Сформировано', 'ok', '1.2 МБ', '07.07.2026', 'other'),
-        ('Счёт №318', 'PDF', 'Оплачено 30%', 'blue', '820 КБ', '08.08.2026', 'invoice'),
-        ('Договор №77', 'PDF', 'Подписан', 'ok', '1.4 МБ', '12.08.2026', 'other'),
-        ('Спецификация', 'XLSX', 'Готово', 'ok', '340 КБ', '12.08.2026', 'other'),
-    ]
-    for title, kind, status, tone, size_label, date_label, doc_type in documents:
-        db.add(Document(deal_id=deal.id, title=title, kind=kind, status=status,
-                        status_tone=tone, size_label=size_label, date_label=date_label,
-                        doc_type=doc_type))
-
-    db.add(Payment(deal_id=deal.id, share=30, amount=2_060_000, due_label='12.08',
-                   status='Оплачено', paid=True))
-    db.add(Payment(deal_id=deal.id, share=70, amount=4_790_000, due_label='до 20.09',
-                   status='Ожидает оплаты', paid=False))
-
-    db.add(Delivery(deal_id=deal.id, origin='Владивосток', destination='Самара',
-                    current_point='Новосибирск', status='В пути', progress=60,
-                    departed_label='12.08', eta_label='22.09'))
-
-    config_items = [
-        ('platform', 'DJI T100', 'Макс. взлётная масса 149,9 кг · полезная нагрузка до 100 кг · '
-                                 'RTK / интеллектуальная навигация', 0, 1, True),
-        ('scenario', 'Опрыскивание', 'Бак 100 л · подача до 40 л/мин · рабочая ширина 5–13 м', 0, 1, True),
-        ('scenario', 'Внесение гранул', 'Питатели, бункер 150 л, система дозирования', 850_000, 1, False),
-        ('scenario', 'Транспортировка грузов', 'Грузовая подвеска, система креплений', 0, 1, True),
-        ('equipment', 'RTK-модуль высокой точности', 'Сантиметровая точность позиционирования', 0, 1, True),
-        ('equipment', 'Комплект для внесения гранул 150 л', 'Питатели, бункер 150 л, дозирование',
-         850_000, 1, False),
-        ('equipment', 'Комплект транспортировки грузов', 'Грузовая подвеска, система креплений', 0, 1, True),
-        ('equipment', 'Дополнительный комплект аккумуляторов', 'Аккумулятор DB2160', 650_000, 1, False),
-        ('equipment', 'Зарядная станция', 'D12000IEP, быстрая зарядка', 0, 1, True),
-        ('equipment', 'Обучение двух операторов', 'Теория, практика, допуски к работе', 0, 2, True),
-        ('spec', 'DJI T100', 'Основная платформа', 0, 1, True),
-        ('spec', 'Аккумулятор DB2160', 'Основной комплект', 0, 4, True),
-        ('spec', 'Зарядная станция D12000IEP', 'Быстрая зарядка', 0, 1, True),
-        ('spec', 'Бак опрыскивания 100 л', 'Основной бак', 0, 1, True),
-        ('spec', 'Комплект распылителей', '2 типа форсунок', 0, 1, True),
-        ('spec', 'Грузовая подвеска', 'Транспортировка грузов', 0, 1, True),
-        ('spec', 'RTK-модуль высокой точности', 'Сантиметровая точность', 0, 1, True),
-        ('spec', 'Комплект для внесения гранул', 'Бункер 150 л', 0, 1, False),
-        ('spec', 'Доп. комплект аккумуляторов', 'Не выбран', 0, 0, False),
-        ('spec', 'Комплект документов', 'Паспорт, сертификаты', 0, 1, True),
-        ('spec', 'Обучение операторов', 'Два оператора', 0, 2, True),
-        ('spec', 'Кейс для хранения и перевозки', 'Транспортировочный кейс', 0, 1, True),
-    ]
-    for section, title, note, price, qty, included in config_items:
-        db.add(ConfigItem(deal_id=deal.id, section=section, title=title, note=note,
-                          price=price, qty=qty, included=included))
-
-    db.add(Training(deal_id=deal.id, date_label='25–26 сентября', participants=2, confirmed=False))
-
-    db.add(AccountingItem(deal_id=deal.id, title='Постановка на учёт', status='Документы приняты',
-                          date_label='12.09.2026', note='Учёт БВС в Росавиации'))
-    db.add(AccountingItem(deal_id=deal.id, title='Сопровождение ЭПР', status='Заявка подана',
-                          date_label='13.09.2026', note='Сопровождение ведёт специалист'))
-
-    operations = [
-        ('12.08', 'Поле 7', 'Подсолнечник', 'Опрыскивание', 320, 'га', 'Завершено', False),
-        ('18.08', 'Поле 3', 'Пшеница', 'Опрыскивание', 280, 'га', 'Завершено', False),
-        ('24.08', 'Поле 9', 'Кукуруза', 'Внесение гранул', 410, 'га', 'Завершено', False),
-        ('30.08', 'Поле 2', 'Подсолнечник', 'Опрыскивание', 255, 'га', 'Завершено', False),
-        ('05.09', 'Поле 5', 'Пшеница', 'Опрыскивание', 350, 'га', 'Завершено', False),
-        ('11.09', 'Поле 11', 'Соя', 'Грузы', 40, 'рейсов', 'Выполнено', False),
-        ('20.09', 'Поле 6', 'Пшеница', 'Опрыскивание', 260, 'га', 'Запланировано', True),
-        ('23.09', 'Поле 4', 'Кукуруза', 'Внесение гранул', 180, 'га', 'Запланировано', True),
-        ('26.09', 'Поле 8', 'Подсолнечник', 'Опрыскивание', 340, 'га', 'Запланировано', True),
-        ('29.09', 'Поле 10', 'Соя', 'Грузы', 18, 'рейсов', 'Запланировано', True),
-    ]
-    for date_label, field, crop, scenario, area, unit, status, planned in operations:
-        db.add(Operation(deal_id=deal.id, date_label=date_label, field=field, crop=crop,
-                         scenario=scenario, area=area, unit=unit, status=status, planned=planned))
-
-    db.add(ServiceTicket(deal_id=deal.id, number='14', title='Плановое ТО', status='В работе',
-                         date_label='15.10.2026', note='Наработка сезона 126 ч · следующее ТО через 18 ч'))
-    return deal
-
-
-def seed_demo_users(db: Session) -> None:
-    client_company = Company(name='ООО «Агроком»', inn='6300000001', city='Самара', kind=ROLE_CLIENT)
-    dealer_company = Company(name='ООО «АгроТех Юг»', inn='6100000002', city='Ростов-на-Дону',
-                             kind=ROLE_DEALER, dealer_level='Silver')
-    db.add_all([client_company, dealer_company])
-    db.flush()
-
-    db.add(User(email='client@agrokom.ru', password_hash=hash_password(DEMO_PASSWORD),
-                full_name='Иван Петров', phone='+7 999 100-10-10', role=ROLE_CLIENT,
-                company_id=client_company.id))
-    db.add(User(email='dealer@agroteh.ru', password_hash=hash_password(DEMO_PASSWORD),
-                full_name='Сергей Кузнецов', phone='+7 999 200-20-20', role=ROLE_DEALER,
-                company_id=dealer_company.id))
-    for key, name in (('ceo', 'Дмитрий Ковалёв'), ('sales_head', 'Ольга Реброва'),
-                      ('service_head', 'Алексей Смирнов')):
-        db.add(User(email=f'{key}@aerohub.ru', password_hash=hash_password(DEMO_PASSWORD),
-                    full_name=name, role=ROLE_STAFF, staff_role=key))
-
-    build_demo_deal(db, client_company)
-
-    db.add_all([
-        DealerOrder(company_id=dealer_company.id, model='DJI T100', qty=2, status='В резерве склада Самара'),
-        DealerOrder(company_id=dealer_company.id, model='DJI T50', qty=1, status='Ожидает 100% оплаты'),
-    ])
-    db.add_all([
-        Lead(company_id=dealer_company.id, name='КФХ Воронов', stage='КП отправлено', contact='+7 918 000-00-01'),
-        Lead(company_id=dealer_company.id, name='ООО «Нива-Юг»', stage='Переговоры', contact='+7 918 000-00-02'),
-        Lead(company_id=dealer_company.id, name='ИП Сергеев', stage='Новый лид', contact='+7 918 000-00-03'),
-    ])
-    db.add(Request(name='Андрей Логинов', phone='+7 927 111-22-33', email='loginov@niva.ru',
-                   farm='КФХ «Нива»', area='4 500', comment='Интересует T70 и обработка подсолнечника.',
-                   source='Форма КП', status='Новая'))
+def seed_admin(db: Session) -> None:
+    """Единственный аккаунт новой базы — администратор (ген. директор: видит все разделы)."""
+    db.add(User(email=ADMIN_EMAIL, password_hash=hash_password(ADMIN_PASSWORD),
+                full_name='Администратор', role=ROLE_STAFF, staff_role='ceo'))
 
 
 def migrate(connection) -> None:
@@ -704,7 +539,7 @@ def init_db() -> None:
         if db.query(StaffRole).count() == 0:
             seed_staff_roles(db)
         if db.query(User).count() == 0:
-            seed_demo_users(db)
+            seed_admin(db)
         db.commit()
         import_parts(db)
     finally:

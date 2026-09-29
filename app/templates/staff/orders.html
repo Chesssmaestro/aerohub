@@ -23,7 +23,7 @@
   <div class="block-head"><h2>Все заказы</h2><span class="block-note">новые — сверху</span></div>
   <div class="table-wrap">
     <table class="proc-table">
-      <thead><tr><th>Заказ</th><th>Клиент</th><th>Комплект</th><th>Сумма</th><th>Этап</th><th>Действие</th><th>Файлы</th><th></th></tr></thead>
+      <thead><tr><th>Заказ</th><th>Клиент</th><th>Комплект</th><th>Сумма</th><th>Этап</th><th>Действие</th><th>Ответственный</th><th></th></tr></thead>
       <tbody>
         {% for d in deals %}
         {% set st = stage_of[d.id] %}
@@ -35,7 +35,7 @@
           <td class="proc-kpi">{{ d.amount|money }}</td>
           <td><span class="doc-status {{ 'warn' if st.actor == 'staff' else ('ok' if st.key == 'done' else 'blue') }}">{{ st.title }}</span></td>
           <td class="proc-kpi">{{ st.staff }}</td>
-          <td class="proc-kpi">{{ d.files|length }}</td>
+          <td class="proc-kpi">{{ d.specialist_name or '—' }}{% if d.specialist_email == user.email %}<br><span class="status-chip accent">вы</span>{% endif %}</td>
           <td><a class="btn btn-outline btn-sm" href="/staff/orders/{{ d.id }}">Открыть</a></td>
         </tr>
         {% else %}

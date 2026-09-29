@@ -8,6 +8,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from .assign import ensure_owner
 from .catalog import MODELS, OPTIONS, PACKAGES, find
 from .models import (AccountingItem, ConfigItem, Deal, DealStage, Delivery, Document, Payment,
                      TimelineEvent, Training, User)
@@ -98,6 +99,7 @@ def create_order(db: Session, user: User, model_key: str, package_key: str,
     db.flush()
     deal.number = str(1000 + deal.id)
 
+    ensure_owner(db, deal)
     _build_stages(db, deal)
     log(db, deal, 'Заявка оформлена в кабинете',
         f'{model["name"]}, пакет «{package["name"]}»'

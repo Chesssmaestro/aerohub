@@ -9,7 +9,7 @@
   <div class="head-row">
     <h1>Заказ №{{ deal.number }}</h1>
     <span class="status-chip {{ 'warn' if stage.actor == 'staff' else ('ok' if stage.key == 'done' else 'blue') }}">{{ stage.title }}</span>
-    <a href="/staff/orders" class="link-accent">← ко всем заказам</a>
+    <a href="/staff/orders" class="link-accent">ко всем заказам</a>
   </div>
   <p>{{ deal.company.name if deal.company else '—' }} · {{ deal.product }} «{{ deal.package }}» ·
      {{ deal.amount|money }} · оформлен {{ deal.created_at|ru_date }} ({{ deal.source }})</p>
@@ -116,17 +116,17 @@
   </div>
 
   <div>
-    <div class="card solo" style="border-left:2px solid var(--accent);">
+    <div class="card solo" style="border-color:var(--accent-dim);">
       <h4>Этап {{ stage.number }} из {{ stage.total }} <span class="mono" style="color:var(--accent);">№{{ deal.number }}</span></h4>
-      <div style="font-family:'Unbounded';font-size:17px;">{{ stage.title }}</div>
+      <div style="font-family:var(--font-brand);font-size:var(--fs-lead);">{{ stage.title }}</div>
       <p class="muted-sm" style="margin-top:8px;">{{ stage.staff }}</p>
 
       {% if action %}
       <form method="post" action="/staff/orders/{{ deal.id }}/stage" style="margin-top:14px;">
         <input type="hidden" name="decision" value="next">
         <div class="f-row">
-          <label>Комментарий (необязательно)</label>
-          <input type="text" name="comment" placeholder="Например: чек проверен по выписке">
+          <label for="f-comment">Комментарий (необязательно)</label>
+          <input id="f-comment" type="text" name="comment" placeholder="Например: чек проверен по выписке">
         </div>
         <button class="btn btn-primary btn-block">{{ action[0] }}</button>
       </form>
@@ -149,12 +149,12 @@
       <form method="post" action="/staff/orders/{{ deal.id }}/documents" enctype="multipart/form-data">
         <input type="hidden" name="doc_type" value="invoice">
         <div class="f-row">
-          <label>Название</label>
-          <input type="text" name="title" placeholder="Счёт-фактура №{{ deal.number }}">
+          <label for="f-title">Название</label>
+          <input id="f-title" type="text" name="title" placeholder="Счёт-фактура №{{ deal.number }}">
         </div>
         <div class="f-row">
-          <label>Файл счёта</label>
-          <input type="file" name="file" required>
+          <label for="f-file">Файл счёта</label>
+          <input id="f-file" type="file" name="file" required>
         </div>
         <button class="btn btn-primary btn-block">Загрузить счёт-фактуру</button>
       </form>
@@ -168,12 +168,12 @@
       <form method="post" action="/staff/orders/{{ deal.id }}/documents" enctype="multipart/form-data">
         <input type="hidden" name="doc_type" value="other">
         <div class="f-row">
-          <label>Название</label>
-          <input type="text" name="title" placeholder="Договор №{{ deal.number }}">
+          <label for="f-title-2">Название</label>
+          <input id="f-title-2" type="text" name="title" placeholder="Договор №{{ deal.number }}">
         </div>
         <div class="f-row">
-          <label>Файл</label>
-          <input type="file" name="file" required>
+          <label for="f-file-2">Файл</label>
+          <input id="f-file-2" type="file" name="file" required>
         </div>
         <label class="opt-row" style="cursor:pointer;">
           <input type="checkbox" name="visible" value="1" checked style="accent-color:#FF6A1A;">
@@ -190,9 +190,35 @@
       {% with drone = deal.product %}{% include 'partials/drone.html' %}{% endwith %}
     </div>
 
+    {% if deal.training %}
+    {% set t = deal.training %}
+    <div class="card solo" style="margin-top:22px;">
+      <h4>Обучение операторов
+        <span class="status-chip {{ 'ok' if t.state in ('scheduled', 'done') else ('accent' if t.state == 'requested' else 'draft') }}">
+          {{ {'not_planned': 'клиент ещё не записался', 'requested': 'ждёт подтверждения', 'scheduled': 'подтверждено', 'done': 'допуск выдан'}[t.state] }}</span></h4>
+      {% if t.state != 'not_planned' %}
+      <div class="doc-row"><span>Даты</span><span class="doc-status">{{ t.date_label }}</span></div>
+      {% if t.format %}<div class="doc-row"><span>Место</span><span class="doc-status">{{ t.format }}</span></div>{% endif %}
+      <div class="doc-row"><span>Операторы</span><span class="doc-status">{% for n in t.operator_list %}{{ n }}{% if not loop.last %}<br>{% endif %}{% else %}{{ t.participants }} чел.{% endfor %}</span></div>
+      {% if t.note %}<p class="muted-sm" style="margin-top:8px;">{{ t.note }}</p>{% endif %}
+      {% endif %}
+      {% if t.state == 'requested' %}
+      <form method="post" action="/staff/orders/{{ deal.id }}/training" style="margin-top:14px;">
+        <input type="hidden" name="action" value="schedule">
+        <button class="btn btn-primary btn-block">Подтвердить запись</button>
+      </form>
+      {% elif t.state == 'scheduled' %}
+      <form method="post" action="/staff/orders/{{ deal.id }}/training" style="margin-top:14px;">
+        <input type="hidden" name="action" value="done">
+        <button class="btn btn-outline btn-block">Курс пройден — выдать допуск</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
     <div class="card solo" style="margin-top:22px;">
       <h4>Клиент</h4>
       <div class="doc-row"><span>Организация</span><span class="doc-status">{{ deal.company.name if deal.company else '—' }}</span></div>
+      <div class="doc-row"><span>Ведёт заказ</span><span class="doc-status">{{ deal.specialist_name or '—' }}{% if deal.specialist_email == user.email %} (вы){% endif %}</span></div>
       {% if deal.created_by %}
       <div class="doc-row"><span>Контакт</span><span class="doc-status">{{ deal.created_by.full_name }}</span></div>
       <div class="doc-row"><span>Телефон</span><span class="doc-status">{{ deal.created_by.phone or '—' }}</span></div>

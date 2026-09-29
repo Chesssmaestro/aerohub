@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config import BASE_DIR, SECRET_KEY
-from .routers import auth, client, dealer, files, parts, public, staff
+from .routers import auth, client, dealer, files, parts, profile, public, staff
 from .security import LoginRequired, WrongRole
 from .seed import init_db
 from .templating import templates
@@ -21,6 +21,13 @@ app = FastAPI(title='АЭРОХАБ', docs_url=None, redoc_url=None, lifespan=li
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, session_cookie='aerohub_session')
 app.mount('/static', StaticFiles(directory=str(BASE_DIR / 'app' / 'static')), name='static')
 
+
+@app.get('/favicon.ico', include_in_schema=False)
+def favicon():
+    """Браузеры запрашивают иконку из корня сайта — отдаём знак АЭРОХАБ."""
+    return FileResponse(BASE_DIR / 'app' / 'static' / 'favicon.ico')
+
+
 app.include_router(public.router)
 app.include_router(parts.router)
 app.include_router(auth.router)
@@ -28,6 +35,7 @@ app.include_router(client.router)
 app.include_router(dealer.router)
 app.include_router(staff.router)
 app.include_router(files.router)
+app.include_router(profile.router)
 
 
 @app.exception_handler(LoginRequired)

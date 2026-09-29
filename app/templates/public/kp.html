@@ -5,7 +5,6 @@
 <div class="pub-wrap">
   <div class="roi-top">
     <div>
-      <div class="eyebrow">Заявка</div>
       <h1>Получить коммерческое предложение</h1>
     </div>
     <div class="roi-desc">
@@ -19,60 +18,37 @@
     </div>
   </div>
 
-  <div class="col-2-1" style="margin-top:32px;padding-bottom:40px;">
+  <div class="col-2-1 page-body" data-reveal>
     <div class="card solo">
-      {% if not user %}
-        <h4>Сначала вход в аккаунт</h4>
-        <p class="muted-sm" style="margin-top:10px;">
-          Заявка оформляется из личного кабинета: там она получает номер, туда менеджер
-          прикладывает счёт и документы, там же виден статус — от согласования до поставки.
-        </p>
-        <a href="/login?next=/kp" class="btn btn-primary btn-block" style="margin-top:18px;">Войти</a>
-        <a href="/register?portal=client" class="btn btn-ghost btn-block" style="margin-top:10px;">
-          Зарегистрироваться как покупатель</a>
-        <p class="demo-note">Регистрация занимает минуту: организация, контакты и пароль.</p>
-      {% elif sent %}
-        <div class="form-ok">Заявка принята. Мы свяжемся с вами по указанным контактам.</div>
-        <p class="muted-sm">Заявка зарегистрирована и видна руководителю и менеджеру продаж
-           в кабинете сотрудника — в разделе «Входящие заявки».</p>
-        <a href="/" class="btn btn-outline" style="margin-top:16px;">На главную</a>
+      {% if user and user.role != 'client' %}
+        <h4>Заявка на КП оформляется покупателем</h4>
+        <p class="muted" style="margin-top:10px;">Вы вошли как {{ user.role_title|lower }}.
+          Заявки и заказы покупателя живут в кабинете клиента.</p>
+        <a href="{{ user.home_url }}" class="btn btn-outline" style="margin-top:16px;">Вернуться в кабинет</a>
       {% else %}
-        {% set f = form or {} %}
-        {% if error %}<div class="form-error">{{ error }}</div>{% endif %}
         <form method="post" action="/kp">
-          <div class="f-two">
-            <div class="f-row">
-              <label>Имя</label>
-              <input type="text" name="name" value="{{ f.name or (user.full_name if user else '') }}" required>
-            </div>
-            <div class="f-row">
-              <label>Телефон</label>
-              <input type="tel" name="phone" value="{{ f.phone or (user.phone if user else '') }}"
-                     placeholder="+7 999 000-00-00">
-            </div>
-          </div>
-          <div class="f-two">
-            <div class="f-row">
-              <label>Почта</label>
-              <input type="email" name="email" value="{{ f.email or (user.email if user else '') }}">
-            </div>
-            <div class="f-row">
-              <label>Хозяйство</label>
-              <input type="text" name="farm" value="{{ f.farm or (user.company.name if user and user.company else '') }}"
-                     placeholder="ООО «Агроком»">
-            </div>
+          <div class="f-row">
+            <label for="f-farm">Хозяйство</label>
+            <input id="f-farm" type="text" name="farm" value="{{ user.org_name if user and user.org_name != user.full_name else '' }}"
+                   placeholder="Название хозяйства или компании">
           </div>
           <div class="f-row">
-            <label>Площадь обработки, га</label>
-            <input type="text" name="area" value="{{ f.area or '' }}" placeholder="12 000">
+            <label for="f-area">Площадь обработки, га</label>
+            <input id="f-area" type="text" name="area" inputmode="numeric" placeholder="Например, 12 000">
           </div>
           <div class="f-row">
-            <label>Задача</label>
-            <textarea name="comment" placeholder="Культуры, число обработок, сроки, интересующая модель.">{{ f.comment or preset or '' }}</textarea>
+            <label for="f-comment">Задача</label>
+            <textarea id="f-comment" name="comment" placeholder="Культуры, число обработок, сроки, интересующая модель.">{{ preset or '' }}</textarea>
           </div>
-          <button type="submit" class="btn btn-primary">Отправить заявку</button>
-          <p class="demo-note">Отправляя заявку, вы соглашаетесь на обработку контактных данных
-             для подготовки коммерческого предложения.</p>
+          <button type="submit" class="btn btn-primary btn-lg">Запросить КП</button>
+          {% if user %}
+          <p class="demo-note">Заявка уйдёт от имени <b>{{ user.full_name }}</b>{% if user.phone %}, {{ user.phone }}{% endif %}.
+            Контакты берём из <a href="{{ user.profile_url }}" class="link-accent">профиля</a>.
+            После отправки откроется личный кабинет — там статус заявки и КП.</p>
+          {% else %}
+          <p class="demo-note">Контакты вводить не нужно: после отправки войдите или зарегистрируйтесь —
+            заявка оформится сама, и вы окажетесь в личном кабинете, где будут КП, счёт и статус.</p>
+          {% endif %}
         </form>
       {% endif %}
     </div>

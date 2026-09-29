@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
+from .. import kp_flow
 from ..catalog import CROP_SETS, MODELS, OPTIONS, PACKAGES
 from ..db import get_db
-from ..models import Request as LeadRequest
-from ..models import RoiCalculation, User
+from ..models import ROLE_CLIENT, RoiCalculation, User
 from ..security import get_current_user
 from ..templating import templates
 
@@ -56,27 +56,18 @@ def kp_form(request: Request, preset: str = '', user: User | None = Depends(get_
 
 
 @router.post('/kp')
-def kp_submit(request: Request, name: str = Form(...), phone: str = Form(''),
-              email: str = Form(''), farm: str = Form(''), area: str = Form(''),
+def kp_submit(request: Request, farm: str = Form(''), area: str = Form(''),
               comment: str = Form(''), db: Session = Depends(get_db),
               user: User | None = Depends(get_current_user)):
-    # Заявку оставляют из-под аккаунта — так она сразу привязана к кабинету
+    """Заявка на КП в один шаг: контакты берём из аккаунта, после отправки — в кабинет."""
     if user is None:
-        return RedirectResponse('/login?next=/kp', status_code=303)
-    if not phone.strip() and not email.strip():
-        return templates.TemplateResponse(request, 'public/kp.html', {
-            'user': user, 'active': 'kp', 'error': 'Укажите телефон или почту для связи.',
-            'form': {'name': name, 'phone': phone, 'email': email, 'farm': farm,
-                     'area': area, 'comment': comment},
-        }, status_code=400)
-
-    db.add(LeadRequest(name=name.strip(), phone=phone.strip(), email=email.strip(),
-                       farm=farm.strip(), area=area.strip(), comment=comment.strip(),
-                       source='Форма КП', user_id=user.id if user else None))
-    db.commit()
-    return templates.TemplateResponse(request, 'public/kp.html', {
-        'user': user, 'active': 'kp', 'sent': True,
-    })
+        # Форма ждёт в сессии: после входа или регистрации заявка оформится сама
+        kp_flow.save_draft(request, farm, area, comment)
+        return RedirectResponse('/register?portal=client&kp=1', status_code=303)
+    if user.role != ROLE_CLIENT:
+        return RedirectResponse(user.home_url, status_code=303)
+    kp_flow.create_request(db, user, farm, area, comment)
+    return RedirectResponse(kp_flow.DONE_URL, status_code=303)
 
 
 @router.get('/contacts')

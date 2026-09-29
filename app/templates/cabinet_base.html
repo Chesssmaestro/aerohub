@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 
 {% block body %}
+<a class="skip-link" href="#main">Перейти к содержимому</a>
 <div class="topbar">
   <div class="tb-left">
     <button class="nav-burger side-burger" id="side-toggle" type="button"
-            aria-label="Разделы кабинета" aria-expanded="false">
+            aria-label="Разделы кабинета" aria-expanded="false" aria-controls="cabinet-side">
       <span></span><span></span><span></span>
     </button>
     <a href="/" class="brand" style="gap:10px;">
       {% include 'partials/logo.html' %}
-      <b>АЭРОХАБ</b>
     </a>
     <span class="tb-portal-tag">{{ user.role_title }}</span>
     <ul class="tb-nav">
@@ -19,12 +19,39 @@
     </ul>
   </div>
   <div class="tb-right">
-    <div class="tb-bell" title="Уведомления">
-      <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M6 9a6 6 0 1112 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9z" stroke="currentColor" stroke-width="1.5"/><path d="M10 18a2 2 0 004 0" stroke="currentColor" stroke-width="1.5"/></svg>
-      {% if notifications %}<b>{{ notifications }}</b>{% endif %}
+    {% include 'partials/theme_toggle.html' %}
+    {% set notes = notifications or [] %}
+    <div class="tb-notify">
+      <button type="button" class="tb-bell" id="bell-toggle" aria-haspopup="true" aria-expanded="false"
+              aria-controls="bell-panel"
+              aria-label="Уведомления{% if notes %}: {{ notes|length }}{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" width="20" height="20" aria-hidden="true"><path d="M6 9a6 6 0 1112 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9z" stroke="currentColor" stroke-width="1.5"/><path d="M10 18a2 2 0 004 0" stroke="currentColor" stroke-width="1.5"/></svg>
+        {% if notes %}<b>{{ notes|length }}</b>{% endif %}
+      </button>
+      <div class="bell-panel" id="bell-panel" hidden>
+        <div class="bp-head">
+          <b>Требует внимания</b>
+          <span>{{ notes|length if notes else 'нет дел' }}</span>
+        </div>
+        {% for n in notes[:8] %}
+        <a class="bp-item" href="{{ n.href }}">
+          <span class="bp-title">{{ n.title }}</span>
+          <span class="bp-note">{{ n.note }}</span>
+          <span class="bp-tag">{{ n.tag }}</span>
+        </a>
+        {% else %}
+        <p class="bp-empty">Всё под контролем — новых задач нет.<br>
+          Здесь появятся заказы и заявки, где следующий шаг за вами.</p>
+        {% endfor %}
+        {% if notes|length > 8 %}
+        <div class="bp-more">и ещё {{ notes|length - 8 }}</div>
+        {% endif %}
+      </div>
     </div>
-    <div class="tb-avatar">{{ user.full_name[:1] }}</div>
-    <span class="tb-user">{{ user.full_name }}{% if user.company %} · {{ user.company.name }}{% endif %}</span>
+    <a href="{{ user.profile_url }}" class="tb-profile {{ 'active' if active == 'profile' }}" title="Мой профиль">
+      <span class="tb-avatar">{{ user.full_name[:1] }}</span>
+      <span class="tb-user">{{ user.full_name }}{% if user.org_name != user.full_name %} · {{ user.org_name }}{% endif %}</span>
+    </a>
     <form action="/logout" method="post" style="display:inline;">
       <button type="submit" class="tb-logout">Выйти</button>
     </form>
@@ -36,7 +63,7 @@
     {% block sidebar %}{% endblock %}
     <div class="side-help">Нужна помощь?<br>Служба поддержки АЭРОХАБ · {{ company.phone }}</div>
   </aside>
-  <main class="emain">
+  <main class="emain" id="main">
     {% block main %}{% endblock %}
   </main>
 </div>

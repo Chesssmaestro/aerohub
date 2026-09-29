@@ -1,0 +1,90 @@
+{# Профиль пользователя — общий для кабинетов клиента, дилера и сотрудника #}
+{% set msg = request.query_params.get('msg', '') %}
+{% set messages = {
+  'saved': ('ok', 'Данные сохранены.'),
+  'name': ('error', 'Укажите имя — минимум 2 символа.'),
+  'pw_ok': ('ok', 'Пароль изменён. В следующий раз входите с новым паролем.'),
+  'pw_wrong': ('error', 'Текущий пароль указан неверно — пароль не изменён.'),
+  'pw_short': ('error', 'Новый пароль должен быть не короче 8 символов.'),
+  'pw_mismatch': ('error', 'Новый пароль и повтор не совпадают — введите ещё раз.'),
+} %}
+
+<div class="profile-head">
+  <div class="ph-avatar" aria-hidden="true">{{ user.full_name[:1] }}</div>
+  <div class="ph-id">
+    <h1>{{ user.full_name }}</h1>
+    <div class="ph-meta">
+      <span class="status-chip accent">{{ user.role_title }}</span>
+      {% if role %}<span>{{ role.name }}</span>{% endif %}
+      {% if user.org_name != user.full_name %}<span>{{ user.org_name }}</span>{% endif %}
+      <span>в АЭРОХАБ с {{ user.created_at|ru_month_year }}</span>
+    </div>
+  </div>
+</div>
+
+{% if msg in messages %}
+<div class="{{ 'form-ok' if messages[msg][0] == 'ok' else 'form-error' }}" role="status">{{ messages[msg][1] }}</div>
+{% endif %}
+
+<div class="profile-grid">
+  <section class="card solo">
+    <h4>Личные данные</h4>
+    <form method="post" action="/profile" class="profile-form">
+      <div class="f-row">
+        <label for="p-name">Имя и фамилия</label>
+        <input id="p-name" type="text" name="full_name" value="{{ user.full_name }}" autocomplete="name" required minlength="2" maxlength="120">
+      </div>
+      <div class="f-row">
+        <label for="p-phone">Телефон</label>
+        <input id="p-phone" type="tel" name="phone" value="{{ user.phone }}" autocomplete="tel" placeholder="+7 7xx xxx xx xx" maxlength="40">
+      </div>
+      <div class="f-row">
+        <label for="p-email">Почта для входа</label>
+        <input id="p-email" type="email" value="{{ user.email }}" readonly aria-describedby="p-email-note">
+        <div class="f-note" id="p-email-note">Почта — это логин. Чтобы сменить её, напишите в поддержку:
+          <a href="mailto:{{ company.email }}" class="link-accent">{{ company.email }}</a></div>
+      </div>
+      <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+    </form>
+  </section>
+
+  <div class="profile-side">
+    <section class="card solo">
+      <h4>{{ 'Должность' if user.role == 'staff' else 'Организация' }}</h4>
+      {% if user.role == 'staff' %}
+        <div class="doc-row"><span>Роль</span><span class="doc-status">{{ role.name if role else 'не назначена' }}</span></div>
+        {% if role %}<div class="doc-row"><span>Подразделение</span><span class="doc-status">{{ role.dept_tag }}</span></div>{% endif %}
+        <div class="doc-row"><span>Компания</span><span class="doc-status">АЭРОХАБ · {{ company.city }}</span></div>
+      {% elif user.company %}
+        <div class="doc-row"><span>Название</span><span class="doc-status">{{ user.org_name }}</span></div>
+        {% if user.company.inn %}<div class="doc-row"><span>ИНН</span><span class="doc-status mono">{{ user.company.inn }}</span></div>{% endif %}
+        {% if user.company.city %}<div class="doc-row"><span>Город</span><span class="doc-status">{{ user.company.city }}</span></div>{% endif %}
+        {% if user.role == 'dealer' %}<div class="doc-row"><span>Уровень партнёра</span><span class="doc-status">{{ user.company.dealer_level }}</span></div>{% endif %}
+      {% else %}
+        <p class="muted">Организация не указана.</p>
+      {% endif %}
+      <div class="doc-row"><span>Аккаунт создан</span><span class="doc-status">{{ user.created_at|ru_date }}</span></div>
+    </section>
+
+    <section class="card solo">
+      <h4>Смена пароля</h4>
+      <form method="post" action="/profile/password">
+        <div class="f-row">
+          <label for="p-cur">Текущий пароль</label>
+          <input id="p-cur" type="password" name="current" autocomplete="current-password" required>
+        </div>
+        <div class="f-row">
+          <label for="p-new">Новый пароль</label>
+          <input id="p-new" type="password" name="new" autocomplete="new-password" minlength="8" required
+                 aria-describedby="p-new-note">
+          <div class="f-note" id="p-new-note">Не короче 8 символов.</div>
+        </div>
+        <div class="f-row">
+          <label for="p-rep">Повторите новый пароль</label>
+          <input id="p-rep" type="password" name="repeat" autocomplete="new-password" minlength="8" required>
+        </div>
+        <button type="submit" class="btn btn-outline">Изменить пароль</button>
+      </form>
+    </section>
+  </div>
+</div>

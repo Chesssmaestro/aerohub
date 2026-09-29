@@ -97,8 +97,7 @@ def request_part(part_id: int, qty: int = Form(1), comment: str = Form(''),
     lead = LeadRequest(
         name=user.full_name, phone=user.phone, email=user.email,
         farm=user.company.name if user.company else '',
-        comment=f'Запчасть {part.article} — {part.name}, {qty} шт. '
-                f'на сумму {int(part.price * qty)} ₽.'
+        comment=f'Запчасть {part.article} — {part.name}, {qty} шт.'
                 + (f' {comment.strip()}' if comment.strip() else ''),
         source='Запрос по запчасти',
         user_id=user.id,

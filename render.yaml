@@ -12,3 +12,7 @@ services:
         generateValue: true
       - key: AEROHUB_STAFF_CODE
         sync: false
+      - key: AEROHUB_ADMIN_EMAIL
+        sync: false
+      - key: AEROHUB_ADMIN_PASSWORD
+        sync: false
