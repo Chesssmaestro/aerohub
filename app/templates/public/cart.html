@@ -1,0 +1,72 @@
+{% extends 'public_base.html' %}
+{% block title %}Корзина запчастей — АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap" style="padding-bottom:60px;">
+  <div class="crumbs" style="margin:22px 0 18px;">
+    <a href="/">Главная</a><span class="sep">›</span>
+    <a href="/parts">Запчасти</a><span class="sep">›</span>
+    <b>Корзина</b>
+  </div>
+
+  <div class="page-head">
+    <h1>Корзина запчастей</h1>
+    <p>Соберите список деталей — заявка на КП уйдёт одним запросом на всю корзину,
+       менеджер подтвердит наличие, срок и итоговую цену.</p>
+  </div>
+
+  {% if sent %}
+  <div class="form-ok">Заявка отправлена — менеджер свяжется с вами и подтвердит наличие и срок.</div>
+  {% endif %}
+
+  {% if items %}
+  <div class="cart-list">
+    {% for i in items %}
+    <div class="cart-row">
+      <div class="cart-row-main">
+        <a href="/parts/{{ i.part.id }}" class="ap-name">{{ i.part.name }}</a>
+        <div class="ap-meta">
+          <span class="mono">{{ i.part.article }}</span>
+          <span class="doc-status {{ 'ok' if i.part.in_stock else 'dim' }}">{{ i.part.stock }}</span>
+          <span class="muted">{{ i.part.price|money if i.part.price else 'цена по запросу' }} / шт.</span>
+        </div>
+      </div>
+      <form method="post" action="/cart/update/{{ i.id }}" class="cart-row-qty">
+        <div class="stepper cr-stepper">
+          <button type="button" data-step="-1">−</button>
+          <input type="number" name="qty" value="{{ i.qty }}" min="1" max="999">
+          <button type="button" data-step="1">+</button>
+        </div>
+        <button type="submit" class="btn btn-ghost btn-sm">Обновить</button>
+      </form>
+      <div class="cart-row-sum">{{ i.sum|money if i.part.price else '—' }}</div>
+      <form method="post" action="/cart/remove/{{ i.id }}">
+        <button type="submit" class="btn btn-ghost btn-sm" title="Убрать из корзины">✕</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="cart-summary">
+    <div>
+      <div class="muted">Итого {{ items|length }} позици{{ 'я' if items|length == 1 else 'и' if items|length < 5 else 'й' }}</div>
+      <div class="del-progress">{{ total|money }}</div>
+      <div class="muted-sm" style="margin-top:4px;">Позиции «по запросу» — не учтены в сумме, цену подтвердит менеджер.</div>
+    </div>
+    <form method="post" action="/cart/checkout" class="cart-checkout-form">
+      <div class="f-row">
+        <label>Комментарий к заявке</label>
+        <textarea name="comment" placeholder="Серийный номер техники, срочность, самовывоз."></textarea>
+      </div>
+      <button class="btn btn-primary btn-block">Отправить заявку на КП →</button>
+    </form>
+  </div>
+  {% else %}
+  <p class="empty">Корзина пуста. <a href="/parts" class="link-accent">Перейти в каталог запчастей →</a></p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cart.js"></script>
+{% endblock %}

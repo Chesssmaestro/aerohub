@@ -1,0 +1,134 @@
+{% extends 'public_base.html' %}
+{% block title %}AGRAS {{ model }} — узлы и запчасти · АЭРОХАБ{% endblock %}
+
+{% block content %}
+<div class="pub-wrap">
+  <div class="roi-top" style="border-bottom:none;padding-bottom:14px;">
+    <div>
+      <div class="eyebrow">Каталог · запчасти по узлам</div>
+      <h1>AGRAS {{ model }}</h1>
+    </div>
+    <div class="roi-desc">
+      Разбивка по узлам сборки — как в эксплод-схеме DJI. Выберите узел слева,
+      посмотрите фото и добавьте нужные детали в корзину.
+    </div>
+    <div class="roi-actions">
+      <a href="/parts" class="btn btn-ghost">Весь каталог одним списком</a>
+    </div>
+  </div>
+
+  {% if added %}
+  <div class="form-ok" style="margin-bottom:1px;">Деталь добавлена в корзину. <a href="/cart" class="link-accent">Перейти в корзину →</a></div>
+  {% endif %}
+
+  <div class="assembly-grid">
+    <aside class="roi-params">
+      <div class="param">
+        <label>Модель</label>
+        <select onchange="location.href='/parts?model='+this.value">
+          {% for m in assembly_models %}
+          <option value="{{ m }}" {{ 'selected' if m == model }}>AGRAS {{ m }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="side-label">Узлы</div>
+      <ul class="role-list assembly-nodes">
+        {% for a in assemblies %}
+        <li>
+          <a href="/parts?model={{ model }}&node={{ a.name|urlencode }}"
+             class="role-item {{ 'active' if selected and a.id == selected.id }}">
+            <span class="ri-dot"></span>{{ a.name }}
+            <span style="margin-left:auto;" class="muted">{{ a.count }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </aside>
+
+    <div class="roi-results">
+      {% if selected %}
+      <div class="roi-panel-title">
+        AGRAS {{ model }} — {{ selected.name }}
+        <span class="block-note">{{ selected.count }} детал{{ 'ь' if selected.count == 1 else 'и' if selected.count < 5 else 'ей' }}</span>
+      </div>
+      {% if selected.image %}
+      <div class="assembly-photo"><img src="{{ selected.image }}" alt="{{ selected.name }}" loading="lazy"></div>
+      {% else %}
+      <p class="empty">Фото узла ещё не загружено — состав узла смотрите в списке справа.</p>
+      {% endif %}
+      <p class="muted-sm" style="margin-top:14px;">Фото — ориентир по составу узла, точки на схеме DJI
+        не переносились. Точный список деталей и артикулы — в панели справа.</p>
+      {% else %}
+      <p class="empty">Для этой модели пока нет узлов.</p>
+      {% endif %}
+    </div>
+
+    <div class="roi-results assembly-cart-panel">
+      <form method="get" action="/parts" style="margin-bottom:16px;">
+        <input type="hidden" name="model" value="{{ model }}">
+        <div class="stepper">
+          <input type="text" name="q" value="{{ q }}" placeholder="Поиск по артикулу или названию…">
+          <button type="submit" title="Найти">→</button>
+        </div>
+      </form>
+
+      {% set rows = search_results if search_results is not none else (selected.items | map(attribute='part') | list if selected else []) %}
+      {% if search_results is not none %}
+      <div class="side-label" style="margin-top:0;">Найдено: {{ rows|length }}</div>
+      {% endif %}
+
+      {% if rows %}
+      <div class="assembly-part-list">
+        {% for p in rows %}
+        <div class="ap-row">
+          <div class="ap-main">
+            <a href="/parts/{{ p.id }}" class="ap-name">{{ loop.index }}. {{ p.name }}</a>
+            <div class="ap-meta">
+              <span class="mono">{{ p.article }}</span>
+              <span class="doc-status {{ 'ok' if p.in_stock else 'dim' }}">{{ p.stock }}</span>
+            </div>
+          </div>
+          <div class="ap-price">{{ p.price|money if p.price else 'по запросу' }}</div>
+          {% if user and user.role == 'client' %}
+          <form method="post" action="/cart/add" class="ap-add">
+            <input type="hidden" name="part_id" value="{{ p.id }}">
+            <input type="hidden" name="next" value="/parts?model={{ model }}{{ ('&node=' + selected.name) if selected and search_results is none else '' }}{{ ('&q=' + q) if q else '' }}">
+            <div class="stepper cr-stepper">
+              <button type="button" data-step="-1">−</button>
+              <input type="number" name="qty" value="1" min="1" max="999">
+              <button type="button" data-step="1">+</button>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">В корзину</button>
+          </form>
+          {% elif user %}
+          <a href="/parts/{{ p.id }}" class="btn btn-ghost btn-sm">Подробнее</a>
+          {% else %}
+          <a href="/login?next=/parts/{{ p.id }}" class="btn btn-outline btn-sm">Войти</a>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty">Ничего не найдено.</p>
+      {% endif %}
+
+      {% if user and user.role == 'client' %}
+      <div class="acp-footer">
+        <span>В корзине: <b>{{ cart_count(user) }}</b></span>
+        <a href="/cart" class="btn btn-primary btn-sm">Перейти в корзину →</a>
+      </div>
+      {% elif not user %}
+      <div class="acp-footer">
+        <span class="muted-sm">Войдите, чтобы добавлять детали в корзину.</span>
+        <a href="/login?next=/parts" class="btn btn-outline btn-sm">Войти</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/cart.js"></script>
+{% endblock %}

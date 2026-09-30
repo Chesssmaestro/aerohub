@@ -10,8 +10,6 @@
     <div class="unit-hero">
       <div>
         <h1>Сделка, поставка<br>и эксплуатация&nbsp;—<br>в одном кабинете</h1>
-        <p>Все этапы после заявки собраны в одной рабочей среде — от комплектации и договора
-           до обучения, эксплуатации и сервиса.</p>
         <div class="uh-status">Статус сделки — <b>{{ stage.title if stage else 'закрыта' }}</b></div>
       </div>
       <div>{% with drone = deal.product %}{% include 'partials/drone.html' %}{% endwith %}</div>
