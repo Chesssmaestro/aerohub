@@ -9,7 +9,7 @@
 set -euo pipefail
 
 SOURCE="${1:?Укажите архив сайта или папку с клоном репозитория}"
-DOMAIN="${2:-aerohub63.ru}"
+DOMAIN="${2:-aerohub24.ru}"
 APP_DIR=/opt/aerohub
 APP_USER=aerohub
 ENV_FILE=/etc/aerohub.env

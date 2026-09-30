@@ -6,7 +6,7 @@
 # На сервер уходит только код: локальная база, .venv, media и tools не копируются.
 param(
     [Parameter(Mandatory = $true)][string]$Server,
-    [string]$Domain = 'aerohub63.ru',
+    [string]$Domain = 'aerohub24.ru',
     [string]$User = 'root'
 )
 $ErrorActionPreference = 'Stop'
