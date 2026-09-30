@@ -229,19 +229,6 @@ input, select, textarea{caret-color:var(--accent);accent-color:var(--accent);}
 .model .m-price{font-family:var(--font-brand);font-size:var(--fs-h3);font-weight:500;margin-top:auto;padding-top:var(--sp-5);font-variant-numeric:tabular-nums;}
 .model .link-accent{margin-top:var(--sp-3);align-self:flex-start;}
 
-/* «Платформа»: три кабинета как узлы одной линии данных */
-.sec-platform{padding-top:var(--sp-8);}
-.platform-head{max-width:760px;margin-bottom:var(--sp-7);}
-.platform-head p{margin-top:var(--sp-4);}
-.data-line{position:relative;}
-.dl-rail{position:absolute;left:0;right:0;top:5px;height:1px;background:var(--accent-dim);transform-origin:left;}
-.dl-nodes{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-7);}
-.dl-node{position:relative;padding-top:var(--sp-7);}
-.dl-dot{position:absolute;left:0;top:0;width:11px;height:11px;background:var(--bg);border:1.5px solid var(--accent);transform:rotate(45deg);}
-.dl-node .t-ico{margin-bottom:var(--sp-4);}
-.dl-node h3{font-size:var(--fs-h3);font-weight:500;letter-spacing:-0.01em;}
-.dl-node p{margin-top:var(--sp-3);font-size:var(--fs-body);color:var(--text-muted);line-height:1.7;max-width:44ch;}
-
 /* Финальный призыв: без панели и свечения — высказывание на линии, справа фрагмент поля */
 .sec-cta{padding:var(--sp-8) 0 var(--sp-9);}
 .cta-band{position:relative;overflow:hidden;border-top:1px solid var(--line-bright);padding:var(--sp-8) 0 0;
@@ -275,10 +262,6 @@ input, select, textarea{caret-color:var(--accent);accent-color:var(--accent);}
   .fig:nth-child(3){padding-left:0;border-left:none;}
   .fig:nth-child(n+3){margin-top:var(--sp-5);}
   .sec{padding:var(--sp-8) 0;}
-  .dl-rail{left:5px;right:auto;top:0;bottom:0;width:1px;height:auto;transform-origin:top;}
-  .dl-nodes{grid-template-columns:1fr;gap:var(--sp-6);}
-  .dl-node{padding:0 0 0 var(--sp-6);}
-  .dl-dot{top:4px;}
 }
 /* На телефоне линейка — горизонтальная лента со снапом, а не четыре экрана подряд */
 @media(max-width:700px){
@@ -1009,7 +992,7 @@ h1,h2,h3,.display{font-family:var(--font-display);font-weight:600;letter-spacing
 .roi-top h1{font-size:clamp(1.75rem, 1.1rem + 2vw, 3rem);line-height:1.08;letter-spacing:-0.025em;}
 .sec h2, .cta-band h2{font-size:clamp(1.625rem, 1.1rem + 1.4vw, 2.5rem);letter-spacing:-0.025em;}
 .page-head h1, .role-head h1, .part-title{font-size:clamp(1.5rem, 1.15rem + 1vw, 2.125rem);letter-spacing:-0.02em;}
-.work-row h3, .dl-node h3, .portal-card h3{font-family:var(--font-display);font-size:1.125rem;font-weight:500;letter-spacing:-0.01em;}
+.work-row h3, .portal-card h3{font-family:var(--font-display);font-size:1.125rem;font-weight:500;letter-spacing:-0.01em;}
 .block-head h2, .roi-panel-title{font-family:var(--font-display);font-size:1.0625rem;font-weight:600;letter-spacing:-0.01em;}
 .org-id b{font-family:var(--font-display);font-size:1.0625rem;}
 

@@ -31,7 +31,7 @@
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
 
-    // Ссылки меню вида «/#platform» на этой же странице — плавно, с отступом под шапку
+    // Ссылки меню вида «/#spraying» на этой же странице — плавно, с отступом под шапку
     // из scroll-margin-top в CSS, чтобы нативный и плавный переходы совпадали.
     document.addEventListener('click', (e) => {
       const a = e.target.closest('a[href*="#"]');
@@ -144,16 +144,6 @@
     } else {
       gsap.to(reveal, { opacity: 1, duration: 0.4 });
     }
-  }
-
-  /* Линия данных «Платформы» вытягивается раньше узлов */
-  const rail = document.querySelector('.dl-rail');
-  if (rail && ScrollTrigger) {
-    const vertical = window.matchMedia('(max-width: 900px)').matches;
-    gsap.fromTo(rail, vertical ? { scaleY: 0 } : { scaleX: 0 }, {
-      scaleX: 1, scaleY: 1, duration: 0.9, ease: 'power2.inOut',
-      scrollTrigger: { trigger: rail, start: 'top 85%', once: true },
-    });
   }
 
   /* ---------- Кабинеты: только лёгкое появление контента ---------- */
